@@ -5,6 +5,18 @@
     геометрия, материалы, масштаб, именование, готовность к рендеру.
 */
 
+-- Рекурсивный сбор всех геометрических нод группы (включая child-ноды
+-- вроде валика #pillow-подлокотника и вложенные группы)
+fn sgCollectParts node arr =
+(
+    for c in node.children do
+    (
+        if not (isGroupHead c) then append arr c
+        sgCollectParts c arr
+    )
+    arr
+)
+
 fn sgValidateSofa grp =
 (
     local report = #()
@@ -13,6 +25,10 @@ fn sgValidateSofa grp =
     if grp == undefined or not isValidNode grp then
         return #("FAIL: группа не создана")
 
+    -- 0. Системные единицы (вся геометрия рассчитана в см)
+    if units.SystemType != #Centimeters then
+        ( append report ("WARN: system units = " + units.SystemType as string + ", рекомендуется Centimeters"); warnings += 1 )
+
     -- 1. Габариты (санити-чек масштаба, см)
     local bb = grp.max - grp.min
     if bb.x < 60 or bb.x > 600 then
@@ -20,9 +36,10 @@ fn sgValidateSofa grp =
     if bb.z < 40 or bb.z > 150 then
         ( append report ("WARN: подозрительная высота: " + bb.z as string + " cm"); warnings += 1 )
 
-    -- 2. Проверка каждой части
+    -- 2. Проверка каждой части (рекурсивно по всей иерархии)
+    local allParts = sgCollectParts grp #()
     local partCount = 0
-    for obj in grp.children where not isGroupHead obj do
+    for obj in allParts do
     (
         partCount += 1
 

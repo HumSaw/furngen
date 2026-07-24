@@ -116,10 +116,12 @@ fn sgBuildRun cfg runWidth runDepth origin rotZ parts prefix withLeftArm withRig
         )
     )
 
-    -- трансформация секции целиком
+    -- трансформация секции целиком: поворот вокруг ЛОКАЛЬНОГО начала секции
+    -- (умножение transform на rotateZMatrix вращает и ориентацию, И позицию
+    -- вокруг мирового 0, где секция была собрана), затем перенос в origin
     for p in sectionParts do
     (
-        if rotZ != 0.0 then rotate p (eulerangles 0 0 rotZ)
+        if rotZ != 0.0 then p.transform = p.transform * (rotateZMatrix rotZ)
         p.pos = p.pos + origin
         append parts p
     )
@@ -143,15 +145,17 @@ fn sgBuildSofa cfg =
     (
         #modular:
         (
-            -- модульные секции с видимым зазором, крайние — с подлокотником
-            local secW = (cfg.width - cfg.armWidth * 2) / cfg.seats
+            -- модульные секции с видимым зазором, крайние — с подлокотником;
+            -- зазоры учтены в ширине секций, итоговая ширина = cfg.width точно
+            local mGap = 2.0
+            local secW = (cfg.width - cfg.armWidth * 2 - mGap * (cfg.seats - 1)) / cfg.seats
             for i = 1 to cfg.seats do
             (
                 local isFirst = (i == 1)
                 local isLast = (i == cfg.seats)
                 local w = secW + (if isFirst then cfg.armWidth else 0) + (if isLast then cfg.armWidth else 0)
-                local cx = -cfg.width / 2.0 + w / 2.0 + (if isFirst then 0 else (cfg.armWidth + secW * (i - 1) + 2.0 * (i - 1)))
-                sgBuildRun cfg w cfg.depth [cx, 0, 0] 0.0 parts ("Module_" + i as string) isFirst isLast fabricMtl pipingMtl
+                local xStart = -cfg.width / 2.0 + (if isFirst then 0.0 else (cfg.armWidth + (secW + mGap) * (i - 1)))
+                sgBuildRun cfg w cfg.depth [xStart + w / 2.0, 0, 0] 0.0 parts ("Module_" + i as string) isFirst isLast fabricMtl pipingMtl
             )
         )
         #corner:
@@ -193,13 +197,18 @@ fn sgBuildSofa cfg =
         )
     )
 
-    -- материалы ножек + слой сцены
+    -- материалы ножек + слой сцены (включая child-ноды, напр. валик #pillow-подлокотника)
     local sofaLayer = sgGetLayer "SofaGen_Furniture"
     for p in parts do
     (
         if matchPattern p.name pattern:"*_Leg_*" then p.material = legMtl
         if p.material == undefined then p.material = fabricMtl
         sofaLayer.addNode p
+        for ch in p.children do
+        (
+            if ch.material == undefined then ch.material = p.material
+            sofaLayer.addNode ch
+        )
     )
 
     -- группа с уникальным именем

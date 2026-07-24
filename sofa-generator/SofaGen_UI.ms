@@ -38,6 +38,7 @@ rollout SofaGenRollout "SofaGen — Procedural Sofa Generator" width:300
         spinner spSeed "Seed:" range:[1, 999999, 12345] type:#integer fieldwidth:70
         button btnGenerate "GENERATE SOFA" width:270 height:34
         button btnRandom "Randomize" width:270 height:26
+        button btnDelete "Delete last" width:270 height:22
     )
     group "Пресеты"
     (
@@ -51,6 +52,8 @@ rollout SofaGenRollout "SofaGen — Procedural Sofa Generator" width:300
     fn buildConfig =
     (
         local cfg = SofaConfig()
+        cfg.seed = spSeed.value
+        sgSetSeed cfg.seed   -- seed ДО выбора палитры стиля: полный детерминизм
         cfg = sgApplyStyle cfg SofaGen_StyleKeys[ddStyle.selection]
         cfg.seats = spSeats.value
         cfg = sgApplyType cfg SofaGen_TypeKeys[ddType.selection]
@@ -62,7 +65,6 @@ rollout SofaGenRollout "SofaGen — Procedural Sofa Generator" width:300
         cfg.piping = cbPiping.checked and cfg.piping
         cfg.backCushions = cbBackCush.checked
         cfg.quality = ddQuality.selection
-        cfg.seed = spSeed.value
         cfg
     )
 
@@ -80,6 +82,17 @@ rollout SofaGenRollout "SofaGen — Procedural Sofa Generator" width:300
     )
 
     on btnGenerate pressed do doGenerate()
+
+    on btnDelete pressed do
+    (
+        if SofaGen_LastGroup != undefined and isValidNode SofaGen_LastGroup then
+        (
+            undo "SofaGen Delete" on ( delete SofaGen_LastGroup )
+            SofaGen_LastGroup = undefined
+            lblStatus.text = "Последний диван удалён"
+        )
+        else lblStatus.text = "Нечего удалять"
+    )
 
     on btnRandom pressed do
     (
@@ -138,6 +151,6 @@ rollout SofaGenRollout "SofaGen — Procedural Sofa Generator" width:300
 fn sgOpenUI =
 (
     if SofaGenUI_Floater != undefined then ( try (closeRolloutFloater SofaGenUI_Floater) catch() )
-    SofaGenUI_Floater = newRolloutFloater ("SofaGen v" + SofaGen_Version) 320 640
+    SofaGenUI_Floater = newRolloutFloater ("SofaGen v" + SofaGen_Version) 320 680
     addRollout SofaGenRollout SofaGenUI_Floater
 )
