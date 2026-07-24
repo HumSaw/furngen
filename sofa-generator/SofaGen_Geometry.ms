@@ -44,6 +44,10 @@ fn sgSetChamferSegs cb segs fsegs hsegs =
 fn sgSoftBlock w d h fillet cfg partName softness:0.25 =
 (
     local q = sgQualitySegs cfg.quality
+    -- защита: fillet не может превышать ~45% наименьшего измерения,
+    -- иначе ChamferBox даёт рваную вывернутую геометрию
+    local maxFillet = (amin (amin w d) h) * 0.45
+    if fillet > maxFillet then fillet = maxFillet
     local b = ChamferBox width:w length:d height:h fillet:fillet name:partName
     sgSetChamferSegs b q[1] q[2] q[3]
 
@@ -68,6 +72,9 @@ fn sgCushion w d h cfg partName isBack:false =
     local q = sgQualitySegs cfg.quality
     local soft = cfg.cushionSoftness
     local fillet = h * (0.26 + soft * 0.10)
+    -- защита от рваной геометрии: fillet <= 45% наименьшего измерения
+    local maxFillet = (amin (amin w d) h) * 0.45
+    if fillet > maxFillet then fillet = maxFillet
 
     local c = ChamferBox width:w length:d height:h fillet:fillet name:partName
     sgSetChamferSegs c (q[1] + 2) q[2] q[3]

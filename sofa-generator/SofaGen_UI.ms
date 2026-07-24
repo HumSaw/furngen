@@ -88,7 +88,8 @@ rollout SofaGenRollout "FurnGen — Procedural Furniture Generator" width:300
         cfg
     )
 
-    -- Общая процедура генерации
+    -- Общая процедура генерации (с перехватом ошибок: при сбое
+    -- никакой «полусобранной» серой геометрии в сцене не остаётся)
     fn doGenerate =
     (
         lblStatus.text = "Генерация..."
@@ -97,8 +98,18 @@ rollout SofaGenRollout "FurnGen — Procedural Furniture Generator" width:300
         local itemType = FurnGen_TypeKeys[ddCategory.selection][ddType.selection]
         -- у диванов ширина от количества мест (как раньше)
         if category == #sofa then cfg.width = amax cfg.width 80.0
-        local grp
-        undo "FurnGen Generate" on ( grp = sgBuildItem cfg category itemType )
+        local grp = undefined
+        try
+        (
+            undo "FurnGen Generate" on ( grp = sgBuildItem cfg category itemType )
+        )
+        catch
+        (
+            max undo   -- откатить частично созданную геометрию
+            lblStatus.text = "ОШИБКА: " + (getCurrentException())
+            format "FurnGen ERROR: %\n" (getCurrentException())
+            return()
+        )
         SofaGen_LastGroup = grp
         local report = sgValidateSofa grp
         lblStatus.text = report[report.count]
@@ -117,11 +128,24 @@ rollout SofaGenRollout "FurnGen — Procedural Furniture Generator" width:300
     (
         lblStatus.text = "Сборка гостиной..."
         local cfg = buildConfig()
-        local grp
-        undo "FurnGen RoomSet" on ( grp = sgBuildRoomSet cfg )
-        SofaGen_LastGroup = grp
-        lblStatus.text = "Room Set готов: " + grp.name
-        if grp != undefined then ( select grp; max zoomext sel )
+        local grp = undefined
+        try
+        (
+            undo "FurnGen RoomSet" on ( grp = sgBuildRoomSet cfg )
+        )
+        catch
+        (
+            max undo
+            lblStatus.text = "ОШИБКА: " + (getCurrentException())
+            format "FurnGen ERROR: %\n" (getCurrentException())
+        )
+        if grp != undefined then
+        (
+            SofaGen_LastGroup = grp
+            lblStatus.text = "Room Set готов: " + grp.name
+            select grp
+            max zoomext sel
+        )
     )
 
     on btnDelete pressed do
