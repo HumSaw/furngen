@@ -8,7 +8,7 @@
     Единицы: сантиметры (рекомендуется System Units = cm).
 */
 
-global SofaGen_Version = "2.0.1"   -- FurnGen: фиксы геометрии, материалов и синтаксиса модуля мебели
+global SofaGen_Version = "2.1.0"   -- FurnGen: + шкаф/комод/растение/зеркало, декор дивана, Bedroom Set
 
 -------------------------------------------------------------------
 -- УТИЛИТЫ
@@ -80,6 +80,7 @@ struct SofaConfig
     cushionHeight = 16.0,
     backCushions = true,
     piping = true,
+    sofaDecor = true,        -- плед + акцентные подушки поверх дивана
 
     -- Качество: 1 = Draft, 2 = Production, 3 = Close-up 4K
     quality = 2,

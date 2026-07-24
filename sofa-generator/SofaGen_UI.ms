@@ -9,22 +9,24 @@ global SofaGenUI_Floater
 global SofaGen_LastGroup
 
 -- Категории и типы внутри каждой категории
-global FurnGen_Categories = #(#sofa, #bed, #chair, #table, #decor)
-global FurnGen_CatLabels  = #("Диваны", "Кровати", "Стулья", "Столы", "Декор")
+global FurnGen_Categories = #(#sofa, #bed, #chair, #table, #storage, #decor)
+global FurnGen_CatLabels  = #("Диваны", "Кровати", "Стулья", "Столы", "Хранение", "Декор")
 
 global FurnGen_TypeKeys = #(
     #(#straight, #corner, #modular, #loveseat, #chaise, #armchair),
     #(#bedSingle, #bedDouble, #bedKing, #bedCanopy),
     #(#chairDining, #chairBar, #chairLounge, #stool),
     #(#tableDining, #tableCoffee, #tableSide, #tableDesk, #tableNightstand),
-    #(#pouf, #rug, #floorLamp, #bookshelf, #tvConsole)
+    #(#wardrobe, #dresser),
+    #(#pouf, #rug, #floorLamp, #bookshelf, #tvConsole, #plant, #mirror)
 )
 global FurnGen_TypeLabels = #(
     #("Прямой", "Угловой", "Модульный", "Loveseat", "Chaise lounge", "Кресло"),
     #("Односпальная", "Двуспальная", "King-size", "С балдахином"),
     #("Обеденный стул", "Барный стул", "Лаунж-кресло", "Табурет"),
     #("Обеденный", "Кофейный", "Приставной", "Письменный", "Тумбочка"),
-    #("Пуф", "Ковёр", "Торшер", "Книжный шкаф", "ТВ-тумба")
+    #("Шкаф", "Комод"),
+    #("Пуф", "Ковёр", "Торшер", "Книжный шкаф", "ТВ-тумба", "Растение", "Зеркало")
 )
 
 global SofaGen_StyleKeys  = #(#modern, #minimal, #scandinavian, #japandi, #luxury, #classic, #brutalism, #midcentury)
@@ -50,6 +52,7 @@ rollout SofaGenRollout "FurnGen — Procedural Furniture Generator" width:300
         spinner spSoft "Мягкость:" range:[0.0, 1.0, 0.5] scale:0.05 fieldwidth:60
         checkbox cbPiping "Кант (piping)" checked:true
         checkbox cbBackCush "Подушки спинки" checked:true
+        checkbox cbDecor "Декор дивана (плед + подушки)" checked:true
     )
     group "Генерация"
     (
@@ -58,7 +61,8 @@ rollout SofaGenRollout "FurnGen — Procedural Furniture Generator" width:300
         button btnGenerate "GENERATE" width:270 height:34
         button btnRandom "Randomize" width:132 height:26 across:2
         button btnRandomAll "Random ALL" width:132 height:26
-        button btnRoomSet "BUILD ROOM SET (гостиная целиком)" width:270 height:30
+        button btnRoomSet "BUILD LIVING ROOM (гостиная)" width:270 height:30
+        button btnBedroom "BUILD BEDROOM (спальня)" width:270 height:30
         button btnDelete "Delete last" width:270 height:22
     )
     group "Пресеты"
@@ -84,6 +88,7 @@ rollout SofaGenRollout "FurnGen — Procedural Furniture Generator" width:300
         cfg.cushionSoftness = spSoft.value
         cfg.piping = cbPiping.checked and cfg.piping
         cfg.backCushions = cbBackCush.checked
+        cfg.sofaDecor = cbDecor.checked
         cfg.quality = ddQuality.selection
         cfg
     )
@@ -124,14 +129,18 @@ rollout SofaGenRollout "FurnGen — Procedural Furniture Generator" width:300
 
     on btnGenerate pressed do doGenerate()
 
-    on btnRoomSet pressed do
+    -- Общий обработчик сборки комнат (гостиная / спальня)
+    fn doBuildSet setKind =
     (
-        lblStatus.text = "Сборка гостиной..."
         local cfg = buildConfig()
         local grp = undefined
         try
         (
-            undo "FurnGen RoomSet" on ( grp = sgBuildRoomSet cfg )
+            undo "FurnGen Set" on
+            (
+                if setKind == #living then grp = sgBuildRoomSet cfg
+                else grp = sgBuildBedroomSet cfg
+            )
         )
         catch
         (
@@ -142,10 +151,22 @@ rollout SofaGenRollout "FurnGen — Procedural Furniture Generator" width:300
         if grp != undefined then
         (
             SofaGen_LastGroup = grp
-            lblStatus.text = "Room Set готов: " + grp.name
+            lblStatus.text = "Готово: " + grp.name
             select grp
             max zoomext sel
         )
+    )
+
+    on btnRoomSet pressed do
+    (
+        lblStatus.text = "Сборка гостиной..."
+        doBuildSet #living
+    )
+
+    on btnBedroom pressed do
+    (
+        lblStatus.text = "Сборка спальни..."
+        doBuildSet #bedroom
     )
 
     on btnDelete pressed do
@@ -238,6 +259,6 @@ rollout SofaGenRollout "FurnGen — Procedural Furniture Generator" width:300
 fn sgOpenUI =
 (
     if SofaGenUI_Floater != undefined then ( try (closeRolloutFloater SofaGenUI_Floater) catch() )
-    SofaGenUI_Floater = newRolloutFloater ("FurnGen v" + SofaGen_Version) 320 760
+    SofaGenUI_Floater = newRolloutFloater ("FurnGen v" + SofaGen_Version) 320 820
     addRollout SofaGenRollout SofaGenUI_Floater
 )

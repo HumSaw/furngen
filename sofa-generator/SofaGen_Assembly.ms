@@ -197,6 +197,39 @@ fn sgBuildSofa cfg =
         )
     )
 
+    -- ДЕКОР ДИВАНА: плед на подлокотнике + акцентные подушки
+    if cfg.sofaDecor and cfg.sofaType != #modular then
+    (
+        local baseTop = cfg.seatHeight - cfg.cushionHeight * 0.55
+        -- плед, переброшенный через правый подлокотник
+        local thCol = sgPick #(color 190 170 140, color 150 120 95, color 200 195 185, \
+            color (cfg.fabricColor.r * 0.6) (cfg.fabricColor.g * 0.6) (cfg.fabricColor.b * 0.6))
+        local throwMtl = sgMakeBeddingMtl thCol mtlName:"FurnGen_Throw"
+        local th = ChamferBox width:(cfg.armWidth + 14.0) length:(cfg.depth * 0.55) height:3.0 fillet:1.2 name:"Sofa_Throw"
+        sgSetChamferSegs th 10 3 2
+        addModifier th (Bend BendAxis:0 BendAngle:150.0)
+        addModifier th (Noisemodifier scale:12.0 fractal:true strength:[1.2, 1.2, 2.0] seed:(sgRandI 1 99999))
+        addModifier th (TurboSmooth iterations:2)
+        addModifier th (Uvwmap maptype:4 width:50 length:50 height:50)
+        th.pos = [cfg.width / 2.0 - cfg.armWidth / 2.0, -6.0, cfg.armHeight + cfg.legHeight + 4.0]
+        th.material = throwMtl
+        append parts th
+        -- 2 акцентные подушки по углам, повёрнутые ромбом/вкось
+        local acCol = sgPick #(color 170 120 60, color 96 118 108, color 44 48 74, color 140 60 50)
+        local acMtl = sgMakeFabricMtl cfg
+        sgSetFirst acMtl #(#baseColor, #colorBase, #base_color) acCol
+        acMtl.name = uniquename "FurnGen_AccentPillow"
+        for i = 1 to 2 do
+        (
+            local px = (if i == 1 then -1 else 1) * (cfg.width / 2.0 - cfg.armWidth - 22.0)
+            local ap = sgCushion 38.0 38.0 11.0 cfg (uniquename "Sofa_AccentPillow") isBack:true
+            rotate ap (eulerangles (sgJitter -72.0 4.0) 0 (sgJitter 0.0 14.0))
+            ap.pos = [sgJitter px 3.0, cfg.depth / 2.0 - 24.0, baseTop + cfg.cushionHeight + 6.0]
+            ap.material = acMtl
+            append parts ap
+        )
+    )
+
     -- материалы ножек + слой сцены (включая child-ноды, напр. валик #pillow-подлокотника)
     local sofaLayer = sgGetLayer "SofaGen_Furniture"
     for p in parts do
