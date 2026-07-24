@@ -215,10 +215,11 @@ fn sgBuildSofa cfg =
         th.material = throwMtl
         append parts th
         -- 2 акцентные подушки по углам, повёрнутые ромбом/вкось
+        -- (материал через фабрику с ВЕРИФИКАЦИЕЙ цвета, а не молчаливый recolor копии)
         local acCol = sgPick #(color 170 120 60, color 96 118 108, color 44 48 74, color 140 60 50)
-        local acMtl = sgMakeFabricMtl cfg
-        sgSetFirst acMtl #(#baseColor, #colorBase, #base_color) acCol
-        acMtl.name = uniquename "FurnGen_AccentPillow"
+        local acPrm = sgFabricParams cfg.fabric
+        local acMtl = sgMakePBR acCol acPrm[1] (uniquename "FurnGen_AccentPillow") sheenAmt:acPrm[2] \
+            bumpTex:(sgFabricBumpMap cfg.fabric acPrm) bumpAmt:acPrm[4]
         for i = 1 to 2 do
         (
             local px = (if i == 1 then -1 else 1) * (cfg.width / 2.0 - cfg.armWidth - 22.0)
@@ -236,10 +237,13 @@ fn sgBuildSofa cfg =
     (
         if matchPattern p.name pattern:"*_Leg_*" then p.material = legMtl
         if p.material == undefined then p.material = fabricMtl
+        -- wirecolor от материала: цвет виден даже в режиме "Object Color"
+        p.wirecolor = sgMtlColor p.material (color 150 150 150)
         sofaLayer.addNode p
         for ch in p.children do
         (
             if ch.material == undefined then ch.material = p.material
+            ch.wirecolor = sgMtlColor ch.material (color 150 150 150)
             sofaLayer.addNode ch
         )
     )

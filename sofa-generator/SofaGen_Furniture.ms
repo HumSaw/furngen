@@ -26,10 +26,13 @@ fn sgFinalizeItem parts grpName defaultMtl =
     for p in parts do
     (
         if p.material == undefined then p.material = defaultMtl
+        -- wirecolor от материала: цвет виден даже в режиме "Object Color"
+        p.wirecolor = sgMtlColor p.material (color 150 150 150)
         lay.addNode p
         for ch in p.children do
         (
             if ch.material == undefined then ch.material = p.material
+            ch.wirecolor = sgMtlColor ch.material (color 150 150 150)
             lay.addNode ch
         )
     )
