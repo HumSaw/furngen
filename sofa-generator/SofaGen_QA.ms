@@ -29,11 +29,12 @@ fn sgValidateSofa grp =
     if units.SystemType != #Centimeters then
         ( append report ("WARN: system units = " + units.SystemType as string + ", рекомендуется Centimeters"); warnings += 1 )
 
-    -- 1. Габариты (санити-чек масштаба, см)
+    -- 1. Габариты (санити-чек масштаба, см) — диапазон охватывает всю
+    -- мебель: от табурета/приставного столика до балдахина и Room Set
     local bb = grp.max - grp.min
-    if bb.x < 60 or bb.x > 600 then
+    if bb.x < 20 or bb.x > 650 then
         ( append report ("WARN: подозрительная ширина: " + bb.x as string + " cm"); warnings += 1 )
-    if bb.z < 40 or bb.z > 150 then
+    if bb.z < 1 or bb.z > 260 then
         ( append report ("WARN: подозрительная высота: " + bb.z as string + " cm"); warnings += 1 )
 
     -- 2. Проверка каждой части (рекурсивно по всей иерархии)

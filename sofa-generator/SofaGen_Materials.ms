@@ -122,3 +122,109 @@ fn sgMakePipingMtl cfg fabricMtl =
     sgSetFirst m #(#baseColor, #colorBase, #base_color) darker
     m
 )
+
+-------------------------------------------------------------------
+-- Дерево (столешницы, каркасы, полки)
+-------------------------------------------------------------------
+fn sgMakeWoodMtl woodColor mtlName:"FurnGen_Wood" =
+(
+    local grainTex = Noise type:2 size:14.0 high:0.68 low:0.38 name:"FurnGen_WoodGrain"
+    local m
+    if sgCoronaAvailable() then
+    (
+        m = CoronaPhysicalMtl()
+        m.name = mtlName
+        sgSetFirst m #(#baseColor, #colorBase) woodColor
+        sgSetFirst m #(#baseRoughness, #roughness) 0.38
+        sgSetFirst m #(#baseBumpTexmap, #texmapBump) grainTex
+        sgSetFirst m #(#baseBumpMapAmount, #bumpAmount) 0.12
+    )
+    else
+    (
+        m = PhysicalMaterial()
+        m.name = mtlName + "_Fallback"
+        sgSetFirst m #(#base_color) woodColor
+        sgSetFirst m #(#roughness) 0.38
+        sgSetFirst m #(#bump_map) grainTex
+        sgSetFirst m #(#bump_map_amt) 0.12
+    )
+    m
+)
+
+-------------------------------------------------------------------
+-- Металл (каркасы, ножки, лампы)
+-------------------------------------------------------------------
+fn sgMakeMetalMtl mColor rough mtlName:"FurnGen_Metal" =
+(
+    local m
+    if sgCoronaAvailable() then
+    (
+        m = CoronaPhysicalMtl()
+        m.name = mtlName
+        sgSetFirst m #(#baseColor, #colorBase) mColor
+        sgSetFirst m #(#metalnessMode, #metalness) 1
+        sgSetFirst m #(#baseRoughness, #roughness) rough
+    )
+    else
+    (
+        m = PhysicalMaterial()
+        m.name = mtlName + "_Fallback"
+        sgSetFirst m #(#base_color) mColor
+        sgSetFirst m #(#metalness) 1.0
+        sgSetFirst m #(#roughness) rough
+    )
+    m
+)
+
+-------------------------------------------------------------------
+-- Постельное бельё (матрас / одеяло / наволочки) — мягкий хлопок
+-------------------------------------------------------------------
+fn sgMakeBeddingMtl beddingColor mtlName:"FurnGen_Bedding" =
+(
+    local weaveTex = Noise type:2 size:0.5 high:0.7 low:0.3 levels:6.0 name:"FurnGen_CottonWeave"
+    local m
+    if sgCoronaAvailable() then
+    (
+        m = CoronaPhysicalMtl()
+        m.name = mtlName
+        sgSetFirst m #(#baseColor, #colorBase) beddingColor
+        sgSetFirst m #(#baseRoughness, #roughness) 0.78
+        sgSetFirst m #(#sheenAmount, #sheen) 0.25
+        sgSetFirst m #(#baseBumpTexmap, #texmapBump) weaveTex
+        sgSetFirst m #(#baseBumpMapAmount, #bumpAmount) 0.22
+        sgSetFirst m #(#translucencyFraction, #translucencyAmount) 0.05
+    )
+    else
+    (
+        m = PhysicalMaterial()
+        m.name = mtlName + "_Fallback"
+        sgSetFirst m #(#base_color) beddingColor
+        sgSetFirst m #(#roughness) 0.78
+        sgSetFirst m #(#bump_map) weaveTex
+        sgSetFirst m #(#bump_map_amt) 0.22
+    )
+    m
+)
+
+-------------------------------------------------------------------
+-- Простой цветной матовый материал (книги, абажуры, декор)
+-------------------------------------------------------------------
+fn sgMakeFlatMtl flatColor rough mtlName:"FurnGen_Flat" =
+(
+    local m
+    if sgCoronaAvailable() then
+    (
+        m = CoronaPhysicalMtl()
+        m.name = mtlName
+        sgSetFirst m #(#baseColor, #colorBase) flatColor
+        sgSetFirst m #(#baseRoughness, #roughness) rough
+    )
+    else
+    (
+        m = PhysicalMaterial()
+        m.name = mtlName + "_Fallback"
+        sgSetFirst m #(#base_color) flatColor
+        sgSetFirst m #(#roughness) rough
+    )
+    m
+)
