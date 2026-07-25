@@ -12,7 +12,7 @@ worked examples. Both are short and will save you a review cycle.
 ## Setup
 
 ```bash
-git clone https://github.com/OWNER/furngen.git
+git clone https://github.com/HumSaw/furngen.git
 cd furngen
 pnpm install          # only needed for the documentation site
 ```

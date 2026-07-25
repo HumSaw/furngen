@@ -10,7 +10,7 @@
 global FurnGenUI_Floater
 global FurnGen_LastGroup
 
-global FurnGen_DocsUrl = "https://github.com/OWNER/furngen#readme"
+global FurnGen_DocsUrl = "https://github.com/HumSaw/furngen#readme"
 
 -- Categories and the item types available inside each one.
 -- Index i of every *Keys / *Labels array refers to the same category.

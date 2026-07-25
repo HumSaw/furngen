@@ -7,7 +7,7 @@
 Generate render-ready sofas, beds, chairs, tables, storage and decor — or an entire
 furnished room — from a single panel. Every result is reproducible from its seed.
 
-[![CI](https://github.com/OWNER/furngen/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/furngen/actions/workflows/ci.yml)
+[![CI](https://github.com/HumSaw/furngen/actions/workflows/ci.yml/badge.svg)](https://github.com/HumSaw/furngen/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-black.svg)](LICENSE)
 [![3ds Max](https://img.shields.io/badge/3ds%20Max-2020%2B-0696D7.svg)](https://www.autodesk.com/products/3ds-max)
 [![MAXScript](https://img.shields.io/badge/MAXScript-native-1f6feb.svg)](docs/en/architecture.md)
@@ -42,7 +42,7 @@ seed always rebuilds the same piece, down to the tilt of each cushion.
 
 **Requirements:** 3ds Max 2020 or newer. Corona Renderer is optional.
 
-1. Download the latest archive from [Releases](https://github.com/OWNER/furngen/releases), or build it yourself:
+1. Download the latest archive from [Releases](https://github.com/HumSaw/furngen/releases), or build it yourself:
 
    ```bash
    node tools/package-release.mjs   # -> dist/FurnGen-1.0.0.zip

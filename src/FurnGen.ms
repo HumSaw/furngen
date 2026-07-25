@@ -13,7 +13,7 @@
         - Corona Renderer (optional; falls back to Physical Material)
         - System Units set to Centimeters (recommended)
 
-    Repository: https://github.com/OWNER/furngen
+    Repository: https://github.com/HumSaw/furngen
     License: MIT
 */
 

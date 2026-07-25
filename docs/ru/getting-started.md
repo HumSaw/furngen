@@ -43,7 +43,7 @@ FurnGen/
 ### Из исходников
 
 ```bash
-git clone https://github.com/OWNER/furngen.git
+git clone https://github.com/HumSaw/furngen.git
 ```
 
 Запускать можно прямо из `src/FurnGen.ms` — сборка не требуется.

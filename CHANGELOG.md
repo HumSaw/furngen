@@ -95,6 +95,9 @@ panel can be dragged onto a toolbar and survives restarts.
 - `tools/package-release.mjs` — builds the distributable archive with a ZIP writer
   implemented on Node's `zlib`, so no `zip` binary is required and the output is
   identical on a developer machine and in CI
+- `tools/check-links.mjs` — resolves every relative Markdown link and `#anchor`
+  across both documentation trees, so a renamed heading cannot silently break a
+  cross-reference between the English and Russian guides
 - GitHub Actions CI running the linter, verifying archive integrity, and building
   the documentation site
 - Issue and pull-request templates that ask for the seed, since every result is
@@ -106,11 +109,14 @@ panel can be dragged onto a toolbar and survives restarts.
   architecture, extending guide and troubleshooting
 - Contributing guide with the manual verification checklist that stands in for
   automated tests, since MAXScript cannot be exercised in CI
+- Project site presenting the catalogue, the eight styles, the fabric and quality
+  tables and the install steps, with every figure read from the same source data
+  the script uses
 
 ### Requirements
 
 3ds Max 2020 or newer. Corona Renderer optional. System units set to centimetres
 is strongly recommended and checked by QA.
 
-[Unreleased]: https://github.com/OWNER/furngen/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/OWNER/furngen/releases/tag/v1.0.0
+[Unreleased]: https://github.com/HumSaw/furngen/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/HumSaw/furngen/releases/tag/v1.0.0

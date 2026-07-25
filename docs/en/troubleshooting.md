@@ -120,7 +120,7 @@ Draft and at Close-up produces the same *shape* at different densities, which ca
 look different at a glance.
 
 If everything genuinely matches and results still differ, that is a bug. Please
-[open an issue](https://github.com/OWNER/furngen/issues) with both seeds and your Max version.
+[open an issue](https://github.com/HumSaw/furngen/issues) with both seeds and your Max version.
 
 ## Geometry warnings from QA
 
@@ -167,4 +167,4 @@ Please include:
 The seed matters most. With it we can reproduce your exact result; without it we
 are guessing.
 
-[Open an issue →](https://github.com/OWNER/furngen/issues/new/choose)
+[Open an issue →](https://github.com/HumSaw/furngen/issues/new/choose)

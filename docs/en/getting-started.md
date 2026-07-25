@@ -19,7 +19,7 @@ external dependency at runtime.
 
 ### From a release archive
 
-1. Download `FurnGen-<version>.zip` from the [Releases](https://github.com/OWNER/furngen/releases) page.
+1. Download `FurnGen-<version>.zip` from the [Releases](https://github.com/HumSaw/furngen/releases) page.
 2. Unzip it anywhere: your Max user-scripts folder, a network share, a project
    folder. Keep the `FurnGen` folder intact — the entry point resolves its
    modules relative to its own location, so moving `FurnGen.ms` away from
@@ -31,7 +31,7 @@ The panel opens docked as a floating window.
 ### From source
 
 ```bash
-git clone https://github.com/OWNER/furngen.git
+git clone https://github.com/HumSaw/furngen.git
 cd furngen
 node tools/package-release.mjs
 ```
