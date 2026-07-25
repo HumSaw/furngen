@@ -1,38 +1,39 @@
 /*
-    SofaGen_Furniture.ms  (FurnGen v2.0.1)
-    --------------------------------------
-    Кровати, стулья, столы, декор и Room Set.
-    Переиспользует Core (конфиг, стили, RNG), Geometry (мягкие блоки,
-    подушки), Materials (ткань, дерево, металл, постель).
+    furniture.ms -- beds, chairs, tables, storage, decor, room sets
+    --------------------------------------------------------------
+    Reuses core.ms (config, styles, RNG), geometry.ms (soft blocks,
+    cushions) and materials.ms (fabric, wood, metal, bedding).
 
-    ВАЖНО (исправления v2.0.1):
-    - каждый предмет использует СВОИ габариты, cfg.width больше
-      не раздувает кровати/столы/декор
-    - одна декларация local на строку, многострочные case —
-      надёжный парсинг MAXScript
-    - материал назначается КАЖДОЙ детали в момент создания
-    - все fillet защищены от превышения размеров (см. Geometry)
+    House rules for this module:
+    - every item derives its own dimensions from its type, so cfg.width
+      never inflates a bed, table or decor piece
+    - one local declaration per line and multi-line case blocks, which
+      MAXScript parses reliably
+    - a material is assigned to EVERY part at creation time
+    - every fillet is clamped against the part size (see geometry.ms)
 
-    Система координат едина с диванами:
-        X — ширина, Y — глубина (перед = -Y), Z — высота (пол = 0), см.
+    Coordinate system matches sofa.ms:
+        X -- width, Y -- depth (front = -Y), Z -- height (floor = 0), in cm.
+
+    Depends on: core.ms, geometry.ms, materials.ms
 */
 
 -------------------------------------------------------------------
--- Финализация: материалы-страховка + слой + группа
+-- Finalize an item: fallback materials, scene layer, group
 -------------------------------------------------------------------
-fn sgFinalizeItem parts grpName defaultMtl =
+fn fgFinalizeItem parts grpName defaultMtl =
 (
-    local lay = sgGetLayer "SofaGen_Furniture"
+    local lay = fgGetLayer "FurnGen_Furniture"
     for p in parts do
     (
         if p.material == undefined then p.material = defaultMtl
-        -- wirecolor от материала: цвет виден даже в режиме "Object Color"
-        p.wirecolor = sgMtlColor p.material (color 150 150 150)
+        -- Drive wirecolor from the material so colour reads in Object Color mode
+        p.wirecolor = fgMtlColor p.material (color 150 150 150)
         lay.addNode p
         for ch in p.children do
         (
             if ch.material == undefined then ch.material = p.material
-            ch.wirecolor = sgMtlColor ch.material (color 150 150 150)
+            ch.wirecolor = fgMtlColor ch.material (color 150 150 150)
             lay.addNode ch
         )
     )
@@ -43,9 +44,9 @@ fn sgFinalizeItem parts grpName defaultMtl =
 )
 
 -------------------------------------------------------------------
--- Ножка мебели (конус / цилиндр / брус)
+-- Generic furniture leg: cone, cylinder or block
 -------------------------------------------------------------------
-fn sgFurnLeg legStyle h partName r1:2.4 r2:1.4 =
+fn fgFurnLeg legStyle h partName r1:2.4 r2:1.4 =
 (
     local lg
     case legStyle of
@@ -59,15 +60,15 @@ fn sgFurnLeg legStyle h partName r1:2.4 r2:1.4 =
 )
 
 -------------------------------------------------------------------
--- 4 ножки по углам (mtl назначается сразу)
+-- Four corner legs, material assigned immediately
 -------------------------------------------------------------------
-fn sgFourLegs parts w d h legMtl prefix inset:6.0 splay:0.0 =
+fn fgFourLegs parts w d h legMtl prefix inset:6.0 splay:0.0 =
 (
     for i = 1 to 4 do
     (
         local sx = if (mod i 2 == 1) then -1 else 1
         local sy = if i <= 2 then -1 else 1
-        local lg = sgFurnLeg #cone h (prefix + "_Leg_" + i as string) r1:2.8 r2:1.8
+        local lg = fgFurnLeg #cone h (prefix + "_Leg_" + i as string) r1:2.8 r2:1.8
         lg.pos = [sx * (w / 2.0 - inset), sy * (d / 2.0 - inset), 0]
         if splay != 0.0 then rotate lg (eulerangles (sy * -splay) (sx * splay) 0)
         lg.material = legMtl
@@ -76,9 +77,9 @@ fn sgFourLegs parts w d h legMtl prefix inset:6.0 splay:0.0 =
 )
 
 -------------------------------------------------------------------
--- Столешница: прямоугольная или круглая, с фаской
+-- Table top: rectangular or round, always chamfered
 -------------------------------------------------------------------
-fn sgTableTop isRound w d thick partName =
+fn fgTableTop isRound w d thick partName =
 (
     local t
     if isRound then
@@ -86,18 +87,18 @@ fn sgTableTop isRound w d thick partName =
     else
     (
         t = ChamferBox width:w length:d height:thick fillet:(thick * 0.28) name:partName
-        sgSetChamferSegs t 4 3 2
+        fgSetChamferSegs t 4 3 2
     )
     t
 )
 
 -------------------------------------------------------------------
--- КРОВАТЬ: #bedSingle #bedDouble #bedKing #bedCanopy
--- Габариты фиксированы типом — cfg.width НЕ влияет.
+-- BED: #bedSingle #bedDouble #bedKing #bedCanopy
+-- Mattress dimensions come from the type; cfg.width has no effect.
 -------------------------------------------------------------------
-fn sgBuildBed cfg itemType =
+fn fgBuildBed cfg itemType =
 (
-    sgSetSeed cfg.seed
+    fgSetSeed cfg.seed
     local parts = #()
 
     local mattW = 160.0
@@ -114,72 +115,72 @@ fn sgBuildBed cfg itemType =
     local mattH = 22.0
     local frameTop = legH + frameH
 
-    local woodMtl = sgMakeWoodMtl cfg.legColor
-    local fabricMtl = sgMakeFabricMtl cfg
-    local beddingCol = sgPick #(color 240 238 232, color 226 222 212, color 210 214 218)
-    local beddingMtl = sgMakeBeddingMtl beddingCol
-    local blanketMtl = sgMakeBeddingMtl cfg.fabricColor mtlName:"FurnGen_Blanket"
+    local woodMtl = fgMakeWoodMtl cfg.legColor
+    local fabricMtl = fgMakeFabricMtl cfg
+    local beddingCol = fgPick #(color 240 238 232, color 226 222 212, color 210 214 218)
+    local beddingMtl = fgMakeBeddingMtl beddingCol
+    local blanketMtl = fgMakeBeddingMtl cfg.fabricColor mtlName:"FurnGen_Blanket"
 
-    -- КАРКАС (мягкий, обитый тканью)
-    local frame = sgSoftBlock (mattW + 14.0) (mattL + 12.0) frameH 4.0 cfg "Bed_Frame" softness:0.25
+    -- FRAME, upholstered
+    local frame = fgSoftBlock (mattW + 14.0) (mattL + 12.0) frameH 4.0 cfg "Bed_Frame" softness:0.25
     frame.pos = [0, 0, legH]
     frame.material = fabricMtl
     append parts frame
 
-    -- МАТРАС (белый, мягкий)
-    local matt = sgSoftBlock mattW mattL mattH 6.0 cfg "Bed_Mattress" softness:0.55
+    -- MATTRESS
+    local matt = fgSoftBlock mattW mattL mattH 6.0 cfg "Bed_Mattress" softness:0.55
     matt.pos = [0, 0, frameTop]
     matt.material = beddingMtl
     append parts matt
 
-    -- ИЗГОЛОВЬЕ (мягкое, у +Y)
+    -- HEADBOARD, upholstered, at +Y
     local hbH = 65.0
     if itemType == #bedCanopy then hbH = 90.0
-    local hb = sgSoftBlock (mattW + 14.0) 12.0 hbH 4.5 cfg "Bed_Headboard" softness:0.45
+    local hb = fgSoftBlock (mattW + 14.0) 12.0 hbH 4.5 cfg "Bed_Headboard" softness:0.45
     hb.pos = [0, mattL / 2.0 + 8.0, legH]
     hb.material = fabricMtl
     append parts hb
 
-    -- ОДЕЯЛО: нижние 2/3 кровати, драпировка двойным Noise
+    -- DUVET covering the lower two thirds, draped with two Noise passes
     local blW = mattW + 22.0
     local blL = mattL * 0.62
     local bl = ChamferBox width:blW length:blL height:5.0 fillet:2.0 name:"Bed_Blanket"
-    sgSetChamferSegs bl 12 3 2
-    addModifier bl (Noisemodifier scale:28.0 fractal:true strength:[2.0, 2.5, 3.5] seed:(sgRandI 1 99999))
-    addModifier bl (Noisemodifier scale:7.0 fractal:true strength:[0.6, 0.6, 1.2] seed:(sgRandI 1 99999))
+    fgSetChamferSegs bl 12 3 2
+    addModifier bl (Noisemodifier scale:28.0 fractal:true strength:[2.0, 2.5, 3.5] seed:(fgRandI 1 99999))
+    addModifier bl (Noisemodifier scale:7.0 fractal:true strength:[0.6, 0.6, 1.2] seed:(fgRandI 1 99999))
     addModifier bl (TurboSmooth iterations:2)
     addModifier bl (Uvwmap maptype:4 width:60 length:60 height:60)
     bl.pos = [0, -mattL / 2.0 + blL / 2.0 - 3.0, frameTop + mattH - 2.0]
     bl.material = blanketMtl
     append parts bl
 
-    -- ПОДУШКИ у изголовья
+    -- PILLOWS at the headboard
     local pilCount = 1
     if mattW >= 140.0 then pilCount = 2
     local pilW = (mattW - 12.0) / pilCount
     for i = 1 to pilCount do
     (
         local px = -mattW / 2.0 + 6.0 + pilW / 2.0 + (i - 1) * pilW
-        local pil = sgCushion (pilW - 6.0) 42.0 15.0 cfg ("Bed_Pillow_" + i as string)
-        rotate pil (eulerangles (sgJitter -18.0 5.0) 0 (sgJitter 0.0 3.0))
-        pil.pos = [sgJitter px 1.5, mattL / 2.0 - 26.0, frameTop + mattH + 4.0]
+        local pil = fgCushion (pilW - 6.0) 42.0 15.0 cfg ("Bed_Pillow_" + i as string)
+        rotate pil (eulerangles (fgJitter -18.0 5.0) 0 (fgJitter 0.0 3.0))
+        pil.pos = [fgJitter px 1.5, mattL / 2.0 - 26.0, frameTop + mattH + 4.0]
         pil.material = beddingMtl
         append parts pil
     )
-    -- декоративная малая подушка спереди (широкие кровати)
+    -- Small decorative pillow in front, wide beds only
     if pilCount == 2 then
     (
-        local dp = sgCushion 40.0 30.0 12.0 cfg "Bed_DecoPillow"
-        rotate dp (eulerangles (sgJitter -25.0 6.0) 0 (sgJitter 0.0 8.0))
-        dp.pos = [sgJitter 0.0 10.0, mattL / 2.0 - 52.0, frameTop + mattH + 3.0]
+        local dp = fgCushion 40.0 30.0 12.0 cfg "Bed_DecoPillow"
+        rotate dp (eulerangles (fgJitter -25.0 6.0) 0 (fgJitter 0.0 8.0))
+        dp.pos = [fgJitter 0.0 10.0, mattL / 2.0 - 52.0, frameTop + mattH + 3.0]
         dp.material = fabricMtl
         append parts dp
     )
 
-    -- НОЖКИ
-    sgFourLegs parts (mattW + 8.0) (mattL + 6.0) legH woodMtl "Bed" inset:4.0
+    -- LEGS
+    fgFourLegs parts (mattW + 8.0) (mattL + 6.0) legH woodMtl "Bed" inset:4.0
 
-    -- БАЛДАХИН: 4 стойки + верхняя рама
+    -- CANOPY: four posts plus a top frame
     if itemType == #bedCanopy then
     (
         local postH = 210.0
@@ -210,18 +211,18 @@ fn sgBuildBed cfg itemType =
         append parts railR
     )
 
-    sgFinalizeItem parts ("Bed_" + (cfg.style as string) + "_" + (itemType as string)) fabricMtl
+    fgFinalizeItem parts ("Bed_" + (cfg.style as string) + "_" + (itemType as string)) fabricMtl
 )
 
 -------------------------------------------------------------------
--- СТУЛ / ТАБУРЕТ: #chairDining #chairBar #chairLounge #stool
+-- CHAIR / STOOL: #chairDining #chairBar #chairLounge #stool
 -------------------------------------------------------------------
-fn sgBuildChair cfg itemType =
+fn fgBuildChair cfg itemType =
 (
-    sgSetSeed cfg.seed
+    fgSetSeed cfg.seed
     local parts = #()
-    local woodMtl = sgMakeWoodMtl cfg.legColor
-    local fabricMtl = sgMakeFabricMtl cfg
+    local woodMtl = fgMakeWoodMtl cfg.legColor
+    local fabricMtl = fgMakeFabricMtl cfg
 
     case itemType of
     (
@@ -230,7 +231,7 @@ fn sgBuildChair cfg itemType =
             local seatH = 45.0
             local seatW = 45.0
             local seatD = 45.0
-            -- ножки: задние выше, переходят в спинку
+            -- Legs: the rear pair is taller and continues into the back
             for i = 1 to 4 do
             (
                 local sx = if (mod i 2 == 1) then -1 else 1
@@ -239,23 +240,23 @@ fn sgBuildChair cfg itemType =
                 if isBack then h = 88.0
                 local sy = -1
                 if isBack then sy = 1
-                local lg = sgFurnLeg #cone h ("Chair_Leg_" + i as string) r1:2.2 r2:1.5
+                local lg = fgFurnLeg #cone h ("Chair_Leg_" + i as string) r1:2.2 r2:1.5
                 lg.pos = [sx * (seatW / 2.0 - 3.0), sy * (seatD / 2.0 - 3.0), 0]
                 if isBack then rotate lg (eulerangles 4.0 0 0)
                 lg.material = woodMtl
                 append parts lg
             )
-            -- сиденье: деревянная основа + мягкая подушка
-            local sBase = sgTableTop false seatW seatD 4.0 "Chair_SeatBase"
+            -- Seat: wooden base plus a soft cushion
+            local sBase = fgTableTop false seatW seatD 4.0 "Chair_SeatBase"
             sBase.pos = [0, 0, seatH]
             sBase.material = woodMtl
             append parts sBase
-            local sCush = sgCushion (seatW - 4.0) (seatD - 4.0) 6.5 cfg "Chair_SeatCushion"
+            local sCush = fgCushion (seatW - 4.0) (seatD - 4.0) 6.5 cfg "Chair_SeatCushion"
             sCush.pos = [0, 0, seatH + 4.0]
             sCush.material = fabricMtl
             append parts sCush
-            -- спинка: мягкая панель между задними ножками
-            local back = sgSoftBlock (seatW - 6.0) 5.0 30.0 2.2 cfg "Chair_Back" softness:0.4
+            -- Back: an upholstered panel between the rear legs
+            local back = fgSoftBlock (seatW - 6.0) 5.0 30.0 2.2 cfg "Chair_Back" softness:0.4
             back.pos = [0, seatD / 2.0 + 1.0, 56.0]
             rotate back (eulerangles 4.0 0 0)
             back.material = fabricMtl
@@ -264,16 +265,16 @@ fn sgBuildChair cfg itemType =
         #chairBar:
         (
             local seatH = 75.0
-            sgFourLegs parts 32.0 32.0 seatH woodMtl "BarStool" inset:2.0 splay:4.0
-            -- подножка-кольцо
+            fgFourLegs parts 32.0 32.0 seatH woodMtl "BarStool" inset:2.0 splay:4.0
+            -- Foot ring
             local ring = Torus radius1:16.5 radius2:0.9 segs:32 name:"BarStool_FootRing"
             ring.pos = [0, 0, 24.0]
-            ring.material = sgMakeMetalMtl (color 40 40 40) 0.3
+            ring.material = fgMakeMetalMtl (color 40 40 40) 0.3
             append parts ring
-            -- круглое мягкое сиденье
+            -- Round upholstered seat
             local seat = ChamferCyl radius:17.0 height:9.0 fillet:3.6 sides:32 filletsegs:3 name:"BarStool_Seat"
             addModifier seat (Push Push_Value:0.6)
-            addModifier seat (Noisemodifier scale:10.0 fractal:true strength:[0.3, 0.3, 0.7] seed:(sgRandI 1 99999))
+            addModifier seat (Noisemodifier scale:10.0 fractal:true strength:[0.3, 0.3, 0.7] seed:(fgRandI 1 99999))
             addModifier seat (TurboSmooth iterations:2)
             addModifier seat (Uvwmap maptype:4 width:50 length:50 height:50)
             seat.pos = [0, 0, seatH]
@@ -282,23 +283,23 @@ fn sgBuildChair cfg itemType =
         )
         #chairLounge:
         (
-            -- низкое широкое лаунж-кресло
+            -- Low, wide lounge chair
             local seatH = 38.0
             local w = 65.0
             local d = 75.0
-            sgFourLegs parts w d seatH woodMtl "Lounge" inset:5.0
-            local sFrame = sgTableTop false w d 5.0 "Lounge_Frame"
+            fgFourLegs parts w d seatH woodMtl "Lounge" inset:5.0
+            local sFrame = fgTableTop false w d 5.0 "Lounge_Frame"
             sFrame.pos = [0, 0, seatH]
             sFrame.material = woodMtl
             append parts sFrame
-            local sCush = sgCushion (w - 6.0) (d - 8.0) 14.0 cfg "Lounge_SeatCushion"
+            local sCush = fgCushion (w - 6.0) (d - 8.0) 14.0 cfg "Lounge_SeatCushion"
             sCush.pos = [0, -2.0, seatH + 4.0]
             sCush.material = fabricMtl
             append parts sCush
-            -- спинка: подушка строится ЛЁЖА (w x длина x толщина),
-            -- затем откидывается назад до почти вертикали
-            local bCush = sgCushion (w - 6.0) (d * 0.72) 12.0 cfg "Lounge_BackCushion" isBack:true
-            rotate bCush (eulerangles (sgJitter 72.0 2.0) 0 0)
+            -- The back cushion is built lying flat (w x length x thickness)
+            -- and then tipped up to near vertical
+            local bCush = fgCushion (w - 6.0) (d * 0.72) 12.0 cfg "Lounge_BackCushion" isBack:true
+            rotate bCush (eulerangles (fgJitter 72.0 2.0) 0 0)
             bCush.pos = [0, d / 2.0 - 6.0, seatH + 12.0]
             bCush.material = fabricMtl
             append parts bCush
@@ -306,7 +307,7 @@ fn sgBuildChair cfg itemType =
         #stool:
         (
             local seatH = 45.0
-            sgFourLegs parts 30.0 30.0 seatH woodMtl "Stool" inset:2.0 splay:5.0
+            fgFourLegs parts 30.0 30.0 seatH woodMtl "Stool" inset:2.0 splay:5.0
             local top = ChamferCyl radius:16.0 height:4.0 fillet:1.2 sides:32 filletsegs:3 name:"Stool_Top"
             top.pos = [0, 0, seatH]
             top.material = woodMtl
@@ -314,20 +315,21 @@ fn sgBuildChair cfg itemType =
         )
     )
 
-    sgFinalizeItem parts ("Chair_" + (cfg.style as string) + "_" + (itemType as string)) fabricMtl
+    fgFinalizeItem parts ("Chair_" + (cfg.style as string) + "_" + (itemType as string)) fabricMtl
 )
 
 -------------------------------------------------------------------
--- СТОЛ: #tableDining #tableCoffee #tableSide #tableDesk #tableNightstand
+-- TABLE: #tableDining #tableCoffee #tableSide #tableDesk #tableNightstand
 -------------------------------------------------------------------
-fn sgBuildTable cfg itemType =
+fn fgBuildTable cfg itemType =
 (
-    sgSetSeed cfg.seed
+    fgSetSeed cfg.seed
     local parts = #()
-    local woodMtl = sgMakeWoodMtl cfg.legColor
-    local topCol = color (amin (cfg.legColor.r * 1.15) 255.0) (amin (cfg.legColor.g * 1.15) 255.0) (amin (cfg.legColor.b * 1.1) 255.0)
-    local topMtl = sgMakeWoodMtl topCol mtlName:"FurnGen_TableTop"
-    local brassMtl = sgMakeMetalMtl (color 190 160 100) 0.25 mtlName:"FurnGen_Brass"
+    local woodMtl = fgMakeWoodMtl cfg.legColor
+    local topCol = color (amin (cfg.legColor.r * 1.15) 255.0) \
+        (amin (cfg.legColor.g * 1.15) 255.0) (amin (cfg.legColor.b * 1.1) 255.0)
+    local topMtl = fgMakeWoodMtl topCol mtlName:"FurnGen_TableTop"
+    local brassMtl = fgMakeMetalMtl (color 190 160 100) 0.25 mtlName:"FurnGen_Brass"
 
     case itemType of
     (
@@ -336,12 +338,12 @@ fn sgBuildTable cfg itemType =
             local w = 180.0
             local d = 90.0
             local h = 73.0
-            sgFourLegs parts w d (h - 4.0) woodMtl "Dining" inset:10.0
-            local top = sgTableTop false w d 4.5 "Dining_Top"
+            fgFourLegs parts w d (h - 4.0) woodMtl "Dining" inset:10.0
+            local top = fgTableTop false w d 4.5 "Dining_Top"
             top.pos = [0, 0, h - 4.0]
             top.material = topMtl
             append parts top
-            -- царга (подстолье)
+            -- Apron beneath the top
             local apron = Box width:(w - 26.0) length:(d - 26.0) height:8.0 name:"Dining_Apron"
             apron.pos = [0, 0, h - 13.0]
             apron.material = woodMtl
@@ -351,8 +353,8 @@ fn sgBuildTable cfg itemType =
         (
             local r = 50.0
             local h = 40.0
-            sgFourLegs parts (r * 1.35) (r * 1.35) (h - 3.5) woodMtl "Coffee" inset:4.0
-            local top = sgTableTop true (r * 2) (r * 2) 3.5 "Coffee_Top"
+            fgFourLegs parts (r * 1.35) (r * 1.35) (h - 3.5) woodMtl "Coffee" inset:4.0
+            local top = fgTableTop true (r * 2) (r * 2) 3.5 "Coffee_Top"
             top.pos = [0, 0, h - 3.5]
             top.material = topMtl
             append parts top
@@ -368,7 +370,7 @@ fn sgBuildTable cfg itemType =
             pole.pos = [0, 0, 2.5]
             pole.material = woodMtl
             append parts pole
-            local top = sgTableTop true (r * 2) (r * 2) 2.5 "Side_Top"
+            local top = fgTableTop true (r * 2) (r * 2) 2.5 "Side_Top"
             top.pos = [0, 0, h - 2.5]
             top.material = topMtl
             append parts top
@@ -378,12 +380,12 @@ fn sgBuildTable cfg itemType =
             local w = 130.0
             local d = 60.0
             local h = 74.0
-            sgFourLegs parts w d (h - 4.0) woodMtl "Desk" inset:7.0
-            local top = sgTableTop false w d 4.0 "Desk_Top"
+            fgFourLegs parts w d (h - 4.0) woodMtl "Desk" inset:7.0
+            local top = fgTableTop false w d 4.0 "Desk_Top"
             top.pos = [0, 0, h - 4.0]
             top.material = topMtl
             append parts top
-            -- тумба с ящиками справа
+            -- Drawer unit on the right
             local drwW = 38.0
             local drwH = 45.0
             local drawerBox = ChamferBox width:drwW length:(d - 8.0) height:drwH fillet:1.0 name:"Desk_DrawerUnit"
@@ -392,7 +394,8 @@ fn sgBuildTable cfg itemType =
             append parts drawerBox
             for j = 1 to 2 do
             (
-                local front = ChamferBox width:(drwW - 4.0) length:1.5 height:(drwH / 2.0 - 4.0) fillet:0.5 name:("Desk_DrawerFront_" + j as string)
+                local front = ChamferBox width:(drwW - 4.0) length:1.5 \
+                    height:(drwH / 2.0 - 4.0) fillet:0.5 name:("Desk_DrawerFront_" + j as string)
                 front.pos = [drawerBox.pos.x, -(d - 8.0) / 2.0 - 0.8, drawerBox.pos.z + 2.0 + (j - 1) * (drwH / 2.0)]
                 front.material = topMtl
                 append parts front
@@ -408,13 +411,14 @@ fn sgBuildTable cfg itemType =
             local d = 40.0
             local h = 50.0
             local legH = 12.0
-            sgFourLegs parts w d legH woodMtl "Night" inset:5.0
+            fgFourLegs parts w d legH woodMtl "Night" inset:5.0
             local body = ChamferBox width:w length:d height:(h - legH) fillet:1.2 name:"Night_Body"
-            sgSetChamferSegs body 3 2 2
+            fgSetChamferSegs body 3 2 2
             body.pos = [0, 0, legH]
             body.material = woodMtl
             append parts body
-            local front = ChamferBox width:(w - 6.0) length:1.5 height:((h - legH) / 2.0 - 5.0) fillet:0.5 name:"Night_DrawerFront"
+            local front = ChamferBox width:(w - 6.0) length:1.5 \
+                height:((h - legH) / 2.0 - 5.0) fillet:0.5 name:"Night_DrawerFront"
             front.pos = [0, -d / 2.0 - 0.8, legH + (h - legH) / 2.0]
             front.material = topMtl
             append parts front
@@ -425,20 +429,21 @@ fn sgBuildTable cfg itemType =
         )
     )
 
-    sgFinalizeItem parts ("Table_" + (cfg.style as string) + "_" + (itemType as string)) woodMtl
+    fgFinalizeItem parts ("Table_" + (cfg.style as string) + "_" + (itemType as string)) woodMtl
 )
 
 -------------------------------------------------------------------
--- ХРАНЕНИЕ: #wardrobe #dresser
+-- STORAGE: #wardrobe #dresser
 -------------------------------------------------------------------
-fn sgBuildStorage cfg itemType =
+fn fgBuildStorage cfg itemType =
 (
-    sgSetSeed cfg.seed
+    fgSetSeed cfg.seed
     local parts = #()
-    local woodMtl = sgMakeWoodMtl cfg.legColor
-    local doorCol = color (amin (cfg.legColor.r * 1.2) 255.0) (amin (cfg.legColor.g * 1.2) 255.0) (amin (cfg.legColor.b * 1.15) 255.0)
-    local doorMtl = sgMakeWoodMtl doorCol mtlName:"FurnGen_StorageDoor"
-    local brassMtl = sgMakeMetalMtl (color 190 160 100) 0.25 mtlName:"FurnGen_Brass"
+    local woodMtl = fgMakeWoodMtl cfg.legColor
+    local doorCol = color (amin (cfg.legColor.r * 1.2) 255.0) \
+        (amin (cfg.legColor.g * 1.2) 255.0) (amin (cfg.legColor.b * 1.15) 255.0)
+    local doorMtl = fgMakeWoodMtl doorCol mtlName:"FurnGen_StorageDoor"
+    local brassMtl = fgMakeMetalMtl (color 190 160 100) 0.25 mtlName:"FurnGen_Brass"
 
     case itemType of
     (
@@ -448,9 +453,9 @@ fn sgBuildStorage cfg itemType =
             local d = 60.0
             local h = 200.0
             local legH = 6.0
-            sgFourLegs parts w d legH woodMtl "Wardrobe" inset:5.0
+            fgFourLegs parts w d legH woodMtl "Wardrobe" inset:5.0
             local body = ChamferBox width:w length:d height:(h - legH) fillet:1.2 name:"Wardrobe_Body"
-            sgSetChamferSegs body 4 2 2
+            fgSetChamferSegs body 4 2 2
             body.pos = [0, 0, legH]
             body.material = woodMtl
             append parts body
@@ -458,11 +463,12 @@ fn sgBuildStorage cfg itemType =
             (
                 local jx = -1
                 if j == 2 then jx = 1
-                local door = ChamferBox width:(w / 2.0 - 3.0) length:1.6 height:(h - legH - 6.0) fillet:0.6 name:("Wardrobe_Door_" + j as string)
+                local door = ChamferBox width:(w / 2.0 - 3.0) length:1.6 \
+                    height:(h - legH - 6.0) fillet:0.6 name:("Wardrobe_Door_" + j as string)
                 door.pos = [jx * (w / 4.0), -d / 2.0 - 0.9, legH + 3.0]
                 door.material = doorMtl
                 append parts door
-                -- вертикальная ручка-рейлинг у центрального стыка дверей
+                -- Vertical rail handle at the centre seam
                 local handle = Cylinder radius:0.8 height:16.0 sides:14 name:("Wardrobe_Handle_" + j as string)
                 handle.pos = [jx * 6.0, -d / 2.0 - 2.8, h * 0.5]
                 handle.material = brassMtl
@@ -475,16 +481,17 @@ fn sgBuildStorage cfg itemType =
             local d = 45.0
             local h = 80.0
             local legH = 10.0
-            sgFourLegs parts w d legH woodMtl "Dresser" inset:6.0
+            fgFourLegs parts w d legH woodMtl "Dresser" inset:6.0
             local body = ChamferBox width:w length:d height:(h - legH) fillet:1.2 name:"Dresser_Body"
-            sgSetChamferSegs body 4 2 2
+            fgSetChamferSegs body 4 2 2
             body.pos = [0, 0, legH]
             body.material = woodMtl
             append parts body
             local drawerH = (h - legH - 8.0) / 3.0
             for j = 1 to 3 do
             (
-                local front = ChamferBox width:(w - 8.0) length:1.5 height:(drawerH - 3.0) fillet:0.5 name:("Dresser_Front_" + j as string)
+                local front = ChamferBox width:(w - 8.0) length:1.5 height:(drawerH - 3.0) \
+                    fillet:0.5 name:("Dresser_Front_" + j as string)
                 front.pos = [0, -d / 2.0 - 0.8, legH + 4.0 + (j - 1) * drawerH]
                 front.material = doorMtl
                 append parts front
@@ -501,18 +508,18 @@ fn sgBuildStorage cfg itemType =
         )
     )
 
-    sgFinalizeItem parts ("Storage_" + (cfg.style as string) + "_" + (itemType as string)) woodMtl
+    fgFinalizeItem parts ("Storage_" + (cfg.style as string) + "_" + (itemType as string)) woodMtl
 )
 
 -------------------------------------------------------------------
--- ДЕКОР: #pouf #rug #floorLamp #bookshelf #tvConsole #plant #mirror
+-- DECOR: #pouf #rug #floorLamp #bookshelf #tvConsole #plant #mirror
 -------------------------------------------------------------------
-fn sgBuildDecor cfg itemType =
+fn fgBuildDecor cfg itemType =
 (
-    sgSetSeed cfg.seed
+    fgSetSeed cfg.seed
     local parts = #()
-    local woodMtl = sgMakeWoodMtl cfg.legColor
-    local fabricMtl = sgMakeFabricMtl cfg
+    local woodMtl = fgMakeWoodMtl cfg.legColor
+    local fabricMtl = fgMakeFabricMtl cfg
 
     case itemType of
     (
@@ -524,7 +531,7 @@ fn sgBuildDecor cfg itemType =
             addModifier p (Push Push_Value:(h * 0.05 * cfg.cushionSoftness + 0.5))
             addModifier p (Noisemodifier scale:(h * 0.9) fractal:true \
                 strength:[r * 0.05 * cfg.cushionSoftness, r * 0.05 * cfg.cushionSoftness, h * 0.06 * cfg.cushionSoftness] \
-                seed:(sgRandI 1 99999))
+                seed:(fgRandI 1 99999))
             addModifier p (TurboSmooth iterations:2)
             addModifier p (Uvwmap maptype:4 width:50 length:50 height:50)
             p.material = fabricMtl
@@ -533,7 +540,7 @@ fn sgBuildDecor cfg itemType =
             (
                 local ring = Torus radius1:(r * 0.98) radius2:0.7 segs:40 name:"Pouf_Piping"
                 ring.pos = [0, 0, h * 0.55]
-                ring.material = sgMakePipingMtl cfg fabricMtl
+                ring.material = fgMakePipingMtl cfg fabricMtl
                 append parts ring
             )
         )
@@ -542,8 +549,8 @@ fn sgBuildDecor cfg itemType =
             local w = 230.0
             local d = 150.0
             local r = ChamferBox width:w length:d height:1.4 fillet:0.5 name:"Rug"
-            sgSetChamferSegs r 12 2 1
-            addModifier r (Noisemodifier scale:35.0 fractal:true strength:[0, 0, 0.4] seed:(sgRandI 1 99999))
+            fgSetChamferSegs r 12 2 1
+            addModifier r (Noisemodifier scale:35.0 fractal:true strength:[0, 0, 0.4] seed:(fgRandI 1 99999))
             addModifier r (TurboSmooth iterations:1)
             addModifier r (Uvwmap maptype:4 width:80 length:80 height:80)
             r.material = fabricMtl
@@ -551,7 +558,7 @@ fn sgBuildDecor cfg itemType =
         )
         #floorLamp:
         (
-            local metalMtl = sgMakeMetalMtl (color 45 45 45) 0.3
+            local metalMtl = fgMakeMetalMtl (color 45 45 45) 0.3
             local base = ChamferCyl radius:15.0 height:2.5 fillet:0.8 sides:36 filletsegs:2 name:"Lamp_Base"
             base.material = metalMtl
             append parts base
@@ -559,10 +566,10 @@ fn sgBuildDecor cfg itemType =
             pole.pos = [0, 0, 2.5]
             pole.material = metalMtl
             append parts pole
-            local shadeCol = sgPick #(color 235 230 220, cfg.fabricColor)
+            local shadeCol = fgPick #(color 235 230 220, cfg.fabricColor)
             local shade = Cone radius1:22.0 radius2:15.0 height:30.0 sides:36 name:"Lamp_Shade"
             shade.pos = [0, 0, 140.0]
-            shade.material = sgMakeFlatMtl shadeCol 0.7 mtlName:"FurnGen_Shade"
+            shade.material = fgMakeFlatMtl shadeCol 0.7 mtlName:"FurnGen_Shade"
             append parts shade
         )
         #bookshelf:
@@ -584,11 +591,12 @@ fn sgBuildDecor cfg itemType =
             backP.pos = [0, d / 2.0 - 0.6, 0]
             backP.material = woodMtl
             append parts backP
-            -- полки + случайные книги
-            local bookPalette = #(color 140 60 50, color 60 90 120, color 90 110 80, color 190 170 140, color 50 50 55, color 170 120 60)
+            -- Shelves plus randomly stacked books
+            local bookPalette = #(color 140 60 50, color 60 90 120, color 90 110 80, \
+                color 190 170 140, color 50 50 55, color 170 120 60)
             local bookMtls = #()
             for c in bookPalette do
-                append bookMtls (sgMakeFlatMtl c 0.6 mtlName:(uniquename "FurnGen_Book"))
+                append bookMtls (fgMakeFlatMtl c 0.6 mtlName:(uniquename "FurnGen_Book"))
             local shelfGap = h / shelfCount
             for s = 0 to shelfCount do
             (
@@ -598,7 +606,7 @@ fn sgBuildDecor cfg itemType =
                 sh.pos = [0, 0, shZ]
                 sh.material = woodMtl
                 append parts sh
-                -- книги (кроме самой верхней доски)
+                -- Books on every shelf except the top board
                 if s < shelfCount then
                 (
                     local bx = -(w / 2.0) + boardT + 2.0
@@ -606,27 +614,29 @@ fn sgBuildDecor cfg itemType =
                     local keepGoing = true
                     while keepGoing and bx < (w / 2.0 - boardT - 8.0) do
                     (
-                        local bw = sgRandF 2.0 4.5
-                        local bh = sgRandF (shelfGap * 0.45) (shelfGap * 0.75)
-                        local bd = sgRandF (d * 0.55) (d * 0.8)
+                        local bw = fgRandF 2.0 4.5
+                        local bh = fgRandF (shelfGap * 0.45) (shelfGap * 0.75)
+                        local bd = fgRandF (d * 0.55) (d * 0.8)
                         local book = Box width:bw length:bd height:bh name:(uniquename "Shelf_Book")
-                        book.pos = [bx + bw / 2.0, sgJitter 0.0 1.5, shelfTop]
-                        rotate book (eulerangles 0 0 (sgJitter 0.0 2.0))
-                        book.material = sgPick bookMtls
+                        book.pos = [bx + bw / 2.0, fgJitter 0.0 1.5, shelfTop]
+                        rotate book (eulerangles 0 0 (fgJitter 0.0 2.0))
+                        book.material = fgPick bookMtls
                         append parts book
-                        bx += bw + (sgRandF 0.1 1.2)
-                        if (sgRandI 1 10) > 8 then bx += sgRandF 6.0 14.0
-                        if (sgRandF 0.0 1.0) < 0.06 then keepGoing = false
+                        bx += bw + (fgRandF 0.1 1.2)
+                        if (fgRandI 1 10) > 8 then bx += fgRandF 6.0 14.0
+                        if (fgRandF 0.0 1.0) < 0.06 then keepGoing = false
                     )
                 )
             )
         )
         #plant:
         (
-            -- растение в кашпо: горшок + земля + стебли-цилиндры с листьями-сферами
-            local potMtl = sgMakeFlatMtl (sgPick #(color 200 195 185, color 90 88 84, color 150 110 85)) 0.55 mtlName:"FurnGen_Pot"
-            local soilMtl = sgMakeFlatMtl (color 45 35 28) 0.9 mtlName:"FurnGen_Soil"
-            local leafMtl = sgMakeFlatMtl (sgPick #(color 60 100 55, color 45 85 50, color 75 110 60)) 0.5 mtlName:"FurnGen_Leaf"
+            -- Potted plant: pot, soil, cylinder stems with squashed-sphere leaves
+            local potMtl = fgMakeFlatMtl (fgPick #(color 200 195 185, color 90 88 84, \
+                color 150 110 85)) 0.55 mtlName:"FurnGen_Pot"
+            local soilMtl = fgMakeFlatMtl (color 45 35 28) 0.9 mtlName:"FurnGen_Soil"
+            local leafMtl = fgMakeFlatMtl (fgPick #(color 60 100 55, color 45 85 50, \
+                color 75 110 60)) 0.5 mtlName:"FurnGen_Leaf"
             local pot = Cone radius1:14.0 radius2:17.0 height:32.0 sides:32 name:"Plant_Pot"
             pot.material = potMtl
             append parts pot
@@ -634,23 +644,23 @@ fn sgBuildDecor cfg itemType =
             soil.pos = [0, 0, 29.0]
             soil.material = soilMtl
             append parts soil
-            local stemCount = sgRandI 4 6
+            local stemCount = fgRandI 4 6
             for s = 1 to stemCount do
             (
-                local ang = sgRandF 0.0 360.0
-                local lean = sgRandF 6.0 22.0
-                local stemH = sgRandF 45.0 85.0
+                local ang = fgRandF 0.0 360.0
+                local lean = fgRandF 6.0 22.0
+                local stemH = fgRandF 45.0 85.0
                 local stem = Cylinder radius:0.5 height:stemH sides:10 name:(uniquename "Plant_Stem")
-                stem.pos = [sgJitter 0.0 5.0, sgJitter 0.0 5.0, 30.0]
+                stem.pos = [fgJitter 0.0 5.0, fgJitter 0.0 5.0, 30.0]
                 rotate stem (eulerangles (lean * (cos (degToRad ang))) (lean * (sin (degToRad ang))) 0)
                 stem.material = leafMtl
                 append parts stem
-                -- листва: сплюснутая сфера на конце стебля
-                local leaf = Sphere radius:(sgRandF 7.0 12.0) segs:16 name:(uniquename "Plant_Leaf")
+                -- Foliage: a squashed sphere at the tip of the stem
+                local leaf = Sphere radius:(fgRandF 7.0 12.0) segs:16 name:(uniquename "Plant_Leaf")
                 leaf.pos = stem.pos + [(stemH * 0.9) * (sin (degToRad lean)) * (sin (degToRad ang)), \
                                        (stemH * 0.9) * (sin (degToRad lean)) * (cos (degToRad ang)) * -1.0, \
                                        stemH * 0.9]
-                addModifier leaf (Noisemodifier scale:8.0 fractal:true strength:[3.0, 3.0, 4.5] seed:(sgRandI 1 99999))
+                addModifier leaf (Noisemodifier scale:8.0 fractal:true strength:[3.0, 3.0, 4.5] seed:(fgRandI 1 99999))
                 scale leaf [1.0, 1.0, 0.72]
                 leaf.material = leafMtl
                 append parts leaf
@@ -658,20 +668,20 @@ fn sgBuildDecor cfg itemType =
         )
         #mirror:
         (
-            -- напольное зеркало в раме, слегка прислонено к стене
-            local frameMtl = sgMakeMetalMtl (color 190 160 100) 0.3 mtlName:"FurnGen_MirrorFrame"
-            local glassMtl = sgMakeMetalMtl (color 220 225 230) 0.02 mtlName:"FurnGen_MirrorGlass"
+            -- Framed floor mirror, leaning slightly against the wall
+            local frameMtl = fgMakeMetalMtl (color 190 160 100) 0.3 mtlName:"FurnGen_MirrorFrame"
+            local glassMtl = fgMakeMetalMtl (color 220 225 230) 0.02 mtlName:"FurnGen_MirrorGlass"
             local mw = 60.0
             local mh = 170.0
             local frame = ChamferBox width:mw length:3.0 height:mh fillet:1.0 name:"Mirror_Frame"
-            sgSetChamferSegs frame 3 2 2
+            fgSetChamferSegs frame 3 2 2
             frame.material = frameMtl
             append parts frame
             local glass = Box width:(mw - 6.0) length:0.6 height:(mh - 6.0) name:"Mirror_Glass"
             glass.pos = [0, -1.6, 3.0]
             glass.material = glassMtl
             append parts glass
-            -- наклон к "стене" (прислонено)
+            -- Lean it back against the wall
             for p in parts do
             (
                 rotate p (eulerangles -6.0 0 0)
@@ -684,11 +694,12 @@ fn sgBuildDecor cfg itemType =
             local d = 40.0
             local h = 45.0
             local legH = 11.0
-            local doorCol = color (amin (cfg.legColor.r * 1.2) 255.0) (amin (cfg.legColor.g * 1.2) 255.0) (amin (cfg.legColor.b * 1.15) 255.0)
-            local doorMtl = sgMakeWoodMtl doorCol mtlName:"FurnGen_TVDoor"
-            sgFourLegs parts w d legH woodMtl "TV" inset:8.0
+            local doorCol = color (amin (cfg.legColor.r * 1.2) 255.0) \
+                (amin (cfg.legColor.g * 1.2) 255.0) (amin (cfg.legColor.b * 1.15) 255.0)
+            local doorMtl = fgMakeWoodMtl doorCol mtlName:"FurnGen_TVDoor"
+            fgFourLegs parts w d legH woodMtl "TV" inset:8.0
             local body = ChamferBox width:w length:d height:(h - legH) fillet:1.5 name:"TV_Body"
-            sgSetChamferSegs body 4 2 2
+            fgSetChamferSegs body 4 2 2
             body.pos = [0, 0, legH]
             body.material = woodMtl
             append parts body
@@ -696,7 +707,8 @@ fn sgBuildDecor cfg itemType =
             (
                 local jx = -1
                 if j == 2 then jx = 1
-                local front = ChamferBox width:(w / 2.0 - 5.0) length:1.5 height:(h - legH - 6.0) fillet:0.6 name:("TV_Door_" + j as string)
+                local front = ChamferBox width:(w / 2.0 - 5.0) length:1.5 \
+                    height:(h - legH - 6.0) fillet:0.6 name:("TV_Door_" + j as string)
                 front.pos = [jx * (w / 4.0), -d / 2.0 - 0.8, legH + 3.0]
                 front.material = doorMtl
                 append parts front
@@ -704,164 +716,164 @@ fn sgBuildDecor cfg itemType =
         )
     )
 
-    sgFinalizeItem parts ("Decor_" + (cfg.style as string) + "_" + (itemType as string)) fabricMtl
+    fgFinalizeItem parts ("Decor_" + (cfg.style as string) + "_" + (itemType as string)) fabricMtl
 )
 
 -------------------------------------------------------------------
--- ROOM SET: целая гостиная одной кнопкой
+-- LIVING ROOM SET: a whole room in one click
 -------------------------------------------------------------------
-fn sgBuildRoomSet cfg =
+fn fgBuildRoomSet cfg =
 (
     local items = #()
     local baseSeed = cfg.seed
 
-    -- диван (лицом к -Y)
+    -- Sofa, facing -Y
     cfg.sofaType = #straight
     cfg.seed = baseSeed
-    local sofa = sgBuildSofa cfg
+    local sofa = fgBuildSofa cfg
     sofa.pos = [0, 90, 0]
     append items sofa
 
-    -- ковёр перед диваном
+    -- Rug in front of the sofa
     cfg.seed = baseSeed + 1
-    local rug = sgBuildDecor cfg #rug
+    local rug = fgBuildDecor cfg #rug
     rug.pos = [0, -35, 0]
     append items rug
 
-    -- кофейный столик на ковре
+    -- Coffee table on the rug
     cfg.seed = baseSeed + 2
-    local coffee = sgBuildTable cfg #tableCoffee
+    local coffee = fgBuildTable cfg #tableCoffee
     coffee.pos = [0, -35, 0]
     append items coffee
 
-    -- лаунж-кресло сбоку, повёрнуто к столику
+    -- Lounge chair to the side, angled towards the table
     cfg.seed = baseSeed + 3
-    local lounge = sgBuildChair cfg #chairLounge
+    local lounge = fgBuildChair cfg #chairLounge
     rotate lounge (eulerangles 0 0 -55)
     lounge.pos = [-150, -50, 0]
     append items lounge
 
-    -- пуф с другой стороны
+    -- Pouf on the opposite side
     cfg.seed = baseSeed + 4
-    local pouf = sgBuildDecor cfg #pouf
+    local pouf = fgBuildDecor cfg #pouf
     pouf.pos = [130, -70, 0]
     append items pouf
 
-    -- торшер за креслом
+    -- Floor lamp behind the chair
     cfg.seed = baseSeed + 5
-    local lamp = sgBuildDecor cfg #floorLamp
+    local lamp = fgBuildDecor cfg #floorLamp
     lamp.pos = [-185, 40, 0]
     append items lamp
 
-    -- приставной столик у дивана
+    -- Side table next to the sofa
     cfg.seed = baseSeed + 6
-    local side = sgBuildTable cfg #tableSide
+    local side = fgBuildTable cfg #tableSide
     side.pos = [135, 75, 0]
     append items side
 
-    -- книжный шкаф у "стены" за диваном
+    -- Bookshelf against the wall behind the sofa
     cfg.seed = baseSeed + 7
-    local shelf = sgBuildDecor cfg #bookshelf
+    local shelf = fgBuildDecor cfg #bookshelf
     shelf.pos = [190, 140, 0]
     append items shelf
 
-    -- растение у другого края
+    -- Plant at the far edge
     cfg.seed = baseSeed + 8
-    local plant = sgBuildDecor cfg #plant
+    local plant = fgBuildDecor cfg #plant
     plant.pos = [200, 40, 0]
     append items plant
 
     cfg.seed = baseSeed
     local grp = group items name:(uniquename ("RoomSet_" + (cfg.style as string)))
-    (sgGetLayer "SofaGen_Furniture").addNode grp
+    (fgGetLayer "FurnGen_Furniture").addNode grp
     format "FurnGen: built room set '%' (% items)\n" grp.name items.count
     grp
 )
 
 -------------------------------------------------------------------
--- BEDROOM SET: спальня одной кнопкой
+-- BEDROOM SET: a whole bedroom in one click
 -------------------------------------------------------------------
-fn sgBuildBedroomSet cfg =
+fn fgBuildBedroomSet cfg =
 (
     local items = #()
     local baseSeed = cfg.seed
 
-    -- кровать (изголовье к +Y — "стене")
+    -- Bed with the headboard towards +Y, the wall
     cfg.seed = baseSeed
-    local bed = sgBuildBed cfg #bedDouble
+    local bed = fgBuildBed cfg #bedDouble
     bed.pos = [0, 60, 0]
     append items bed
 
-    -- тумбочки по обе стороны
+    -- Nightstands on both sides
     cfg.seed = baseSeed + 1
-    local ns1 = sgBuildTable cfg #tableNightstand
+    local ns1 = fgBuildTable cfg #tableNightstand
     ns1.pos = [-120, 130, 0]
     append items ns1
     cfg.seed = baseSeed + 2
-    local ns2 = sgBuildTable cfg #tableNightstand
+    local ns2 = fgBuildTable cfg #tableNightstand
     ns2.pos = [120, 130, 0]
     append items ns2
 
-    -- комод напротив кровати
+    -- Dresser opposite the bed
     cfg.seed = baseSeed + 3
-    local dr = sgBuildStorage cfg #dresser
+    local dr = fgBuildStorage cfg #dresser
     rotate dr (eulerangles 0 0 180)
     dr.pos = [-30, -160, 0]
     append items dr
 
-    -- шкаф в углу
+    -- Wardrobe in the corner
     cfg.seed = baseSeed + 4
-    local wd = sgBuildStorage cfg #wardrobe
+    local wd = fgBuildStorage cfg #wardrobe
     rotate wd (eulerangles 0 0 -90)
     wd.pos = [-200, 40, 0]
     append items wd
 
-    -- ковёр под кроватью (выступает спереди)
+    -- Rug under the bed, extending past the foot
     cfg.seed = baseSeed + 5
-    local rug = sgBuildDecor cfg #rug
+    local rug = fgBuildDecor cfg #rug
     rug.pos = [0, -20, 0]
     append items rug
 
-    -- табурет-скамья в изножье
+    -- Bench stool at the foot of the bed
     cfg.seed = baseSeed + 6
-    local st = sgBuildChair cfg #stool
+    local st = fgBuildChair cfg #stool
     st.pos = [0, -70, 0]
     append items st
 
-    -- зеркало у стены + растение
+    -- Mirror against the wall plus a plant
     cfg.seed = baseSeed + 7
-    local mir = sgBuildDecor cfg #mirror
+    local mir = fgBuildDecor cfg #mirror
     rotate mir (eulerangles 0 0 35)
     mir.pos = [185, 120, 0]
     append items mir
     cfg.seed = baseSeed + 8
-    local plant = sgBuildDecor cfg #plant
+    local plant = fgBuildDecor cfg #plant
     plant.pos = [200, -120, 0]
     append items plant
 
     cfg.seed = baseSeed
     local grp = group items name:(uniquename ("BedroomSet_" + (cfg.style as string)))
-    (sgGetLayer "SofaGen_Furniture").addNode grp
+    (fgGetLayer "FurnGen_Furniture").addNode grp
     format "FurnGen: built bedroom set '%' (% items)\n" grp.name items.count
     grp
 )
 
 -------------------------------------------------------------------
--- ДИСПЕТЧЕР: единая точка входа для UI
+-- DISPATCHER: the single entry point used by the UI
 -------------------------------------------------------------------
-fn sgBuildItem cfg category itemType =
+fn fgBuildItem cfg category itemType =
 (
     local result = undefined
     case category of
     (
-        #sofa:    ( cfg = sgApplyType cfg itemType; result = sgBuildSofa cfg )
-        #bed:     ( result = sgBuildBed cfg itemType )
-        #chair:   ( result = sgBuildChair cfg itemType )
-        #table:   ( result = sgBuildTable cfg itemType )
-        #storage: ( result = sgBuildStorage cfg itemType )
-        #decor:   ( result = sgBuildDecor cfg itemType )
-        #roomset: ( result = sgBuildRoomSet cfg )
-        default:  ( cfg = sgApplyType cfg itemType; result = sgBuildSofa cfg )
+        #sofa:    ( cfg = fgApplyType cfg itemType; result = fgBuildSofa cfg )
+        #bed:     ( result = fgBuildBed cfg itemType )
+        #chair:   ( result = fgBuildChair cfg itemType )
+        #table:   ( result = fgBuildTable cfg itemType )
+        #storage: ( result = fgBuildStorage cfg itemType )
+        #decor:   ( result = fgBuildDecor cfg itemType )
+        #roomset: ( result = fgBuildRoomSet cfg )
+        default:  ( cfg = fgApplyType cfg itemType; result = fgBuildSofa cfg )
     )
     result
 )
