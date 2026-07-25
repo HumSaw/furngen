@@ -32,11 +32,22 @@ other settings deliberately.
 | Luxury | rounded | cylinder, 10 cm | jewel tones, brass | fabric → velvet |
 | Classic | rounded | cone, 12 cm | warm browns | piping on |
 | Brutalism | square | none, 2 cm | concrete greys | piping off, softness → 0.35 |
-| Mid-century | bolster | cone, 18 cm | ochre, teal, walnut | — |
+| Mid-century | pillow | cone, 18 cm | ochre, teal, walnut | — |
 
 Because Luxury forces velvet and Minimal forces piping off, changing the style
 can visibly override a choice you made further down the panel. That is
 intentional — the preset represents a coherent design language.
+
+The three armrest silhouettes:
+
+| Arm style | Shape |
+|---|---|
+| `square` | Slab arm, tight 14% fillet, minimal inflation |
+| `rounded` | Generous 42% fillet, softly inflated |
+| `pillow` | Low frame with a separate soft bolster rolled on top |
+
+`pillow` is the only one built from two parts — the bolster is a child node of
+the arm, which is why QA walks the hierarchy recursively.
 
 ### Fabric
 
@@ -108,15 +119,16 @@ tilted off-axis. Turn it off when the sofa is a background prop.
 Controls segment counts, TurboSmooth iterations and whether the fine wrinkle
 pass runs at all.
 
-| Level | Use for | Cost |
-|---|---|---|
-| Draft | Exploring, layout blocking | lightest |
-| Production | Normal renders | balanced |
-| Close-up 4K | Hero shots filling the frame | heaviest |
+| Level | Segments | Fillet segs | TurboSmooth | Fine wrinkles |
+|---|---|---|---|---|
+| Draft | 3 | 2 | 1 | no |
+| Production | 5 | 3 | 2 | yes |
+| Close-up 4K | 8 | 4 | 3 | yes |
 
-Explore in Draft, render in Production. Reach for Close-up only when the
-furniture dominates the frame — the fine wrinkle pass is invisible at distance
-and simply costs memory.
+Draft is the only level that skips the fine wrinkle pass, which is what makes it
+fast enough to hammer **Randomize** against. Close-up 4K does not add a new
+effect over Production — it raises density everywhere — so reach for it only
+when the furniture dominates the frame.
 
 ### Seed
 
@@ -176,12 +188,24 @@ Listener.
 
 | Message | Meaning |
 |---|---|
-| `OK: N parts, no problems found` | Clean build |
-| `WARN: system units = ...` | Scene is not in centimetres — fix Units Setup |
-| `WARN: suspicious width/height` | Result fell outside plausible furniture bounds |
-| `WARN: N part(s) without material` | Report this as a bug with your seed |
-| `WARN: degenerate geometry` | A part collapsed; report it with your seed |
+| `OK: N parts / M tris, render ready` | Clean build |
+| `CHECKED: N parts / M tris, K issue(s) - see Listener` | Built, but something needs a look |
 | `Error: ...` | Build failed and was rolled back; check the Listener |
+
+The individual issues behind a `CHECKED` summary appear in the Listener:
+
+| Line | Meaning |
+|---|---|
+| `WARN: system units are Inches, Centimeters recommended` | Fix Units Setup, then regenerate |
+| `WARN: implausible width: N cm` | Result fell outside 20–650 cm |
+| `WARN: implausible height: N cm` | Result fell outside 1–260 cm |
+| `WARN: default node name: Box001` | A part was left unnamed — report it |
+| `FAIL: missing material: NAME` | Report this as a bug with your seed |
+| `FAIL: empty geometry: NAME` | A part collapsed; report it with your seed |
+| `FAIL: nothing was created` | The builder returned no group |
+
+`OK` versus `CHECKED` is the distinction to watch: both mean you have geometry,
+but only `OK` means nothing needs your attention.
 
 ## Scripting it
 

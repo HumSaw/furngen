@@ -79,7 +79,7 @@ technique of the whole tool.
 2. Push              inflates along vertex normals
                      — simulates filling pressing against the cover
 3. Noise (fractal)   large-scale sag and folds
-                     — a second, finer pass adds wrinkles at high quality
+                     — a second, finer pass adds wrinkles when quality >= 2
 4. TurboSmooth       subdivision into a soft silhouette
 ```
 
@@ -99,7 +99,8 @@ spinner changes the entire character of a piece.
 exceeds half of the smallest dimension. Every fillet is therefore clamped:
 
 ```maxscript
-local f = amin fillet (amin w (amin d h)) * 0.45
+local maxFillet = (amin (amin w d) h) * 0.45
+if fillet > maxFillet then fillet = maxFillet
 ```
 
 The linter flags any `ChamferBox` whose `fillet:` is a bare literal without an
@@ -154,10 +155,16 @@ correctly even in Object Color viewport mode.
 
 ### Fabric definitions
 
-`fgFabricParams` returns roughness, sheen, metalness and bump amount per fabric;
-`fgFabricBumpMap` builds the matching procedural map — fractal Noise for bouclé
-and linen, fine Noise for velvet and cotton, Cellular for leather pores. No
-bitmap dependencies, so nothing breaks when the archive is moved.
+`fgFabricParams` returns five values per fabric:
+
+```maxscript
+#(roughness, sheenAmount, bumpSize, bumpStrength, useCellular)
+```
+
+`fgFabricBumpMap` reads that tuple and builds the matching procedural map:
+`Cellular` when `useCellular` is true (leather pores), otherwise fractal `Noise`
+sized by `bumpSize` — coarse for bouclé, fine for velvet. Everything is
+procedural, so there are no bitmap dependencies to break when the archive moves.
 
 ## Sofa assembly: runs
 
@@ -218,14 +225,25 @@ reproducible from a single seed and no two pieces are identical.
 After every build, `fgValidateItem grp` walks the group and checks:
 
 - **System units** are centimetres, since modifier amounts are absolute
-- **Bounding box** falls inside plausible furniture dimensions
+- **Bounding box** falls inside plausible furniture dimensions (20–650 cm wide,
+  1–260 cm tall, spanning a side table up to a canopy bed or a whole room set)
 - **Every part has a material**
-- **No degenerate geometry** — zero-extent parts
-- **Naming** follows the `FurnGen_*` convention
+- **No empty geometry** — parts whose mesh has zero verts or faces
+- **No leftover default names** like `Box001` or `ChamferBox001`
 
-It returns a report struct; the panel prints the summary to the status line and
-the detail to the Listener. QA never blocks a build — it tells you what to look
-at.
+The walk is recursive (`fgCollectParts`), so it also covers child nodes such as
+the bolster parented to a `#pillow` armrest, and nested groups inside a room set.
+
+It returns an **array of report lines**, and the summary is always the last
+element — which is why the panel can read `report[report.count]` for the status
+line while every line goes to the Listener:
+
+```
+OK: 34 parts / 118240 tris, render ready
+CHECKED: 34 parts / 118240 tris, 2 issue(s) - see Listener
+```
+
+QA never blocks a build. It tells you what to look at.
 
 ## Error handling
 

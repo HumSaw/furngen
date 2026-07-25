@@ -59,15 +59,20 @@ it as the style "winning" over their earlier choice.
 
 ## Adding a fabric
 
-In `src/modules/materials.ms`, extend `fgFabricParams`:
+In `src/modules/materials.ms`, extend `fgFabricParams`. It returns five values:
 
 ```maxscript
-#corduroy: #(0.72, 0.0, 0.10, 3.2)   -- roughness, metalness, sheen, bumpAmount
+-- #(roughness, sheenAmount, bumpSize, bumpStrength, useCellular)
+#corduroy: #(0.72, 0.10, 0.90, 0.55, false)
 ```
 
-and give it a bump character in `fgFabricBumpMap`. Corduroy wants directional
-ribs, so a stretched Noise rather than an isotropic one. Then add the key and
-label to `FurnGen_FabricKeys` and the `ddFabric` items — index-aligned, as above.
+`useCellular` is the switch `fgFabricBumpMap` reads: `true` gives you a
+`Cellular` map (how leather gets its pores), `false` gives fractal `Noise` sized
+by `bumpSize`. Corduroy is a noise fabric with a fairly coarse rib, hence
+`0.90` — bouclé sits at `1.40` and velvet at `0.25` for comparison.
+
+Then add the key and label to `FurnGen_FabricKeys` and the `ddFabric` items —
+index-aligned, as above.
 
 ## Adding a furniture type
 

@@ -7,10 +7,16 @@ prefixed `FurnGen`, so it is easy to find among Max's own output.
 
 ## The script will not run
 
-**"Unable to find include file" or a module load error**
+**A dialog saying "FurnGen could not start: N module(s) missing."**
 
 `FurnGen.ms` locates `modules/` relative to its own path. If you copied
 `FurnGen.ms` somewhere without the `modules` folder, it cannot find its code.
+The Listener names each file it could not load:
+
+```
+FurnGen ERROR: module not found: C:\...\modules\core.ms
+```
+
 Keep the folder intact:
 
 ```
@@ -75,7 +81,7 @@ the furniture looks like hard plastic.
 The QA report warns about this:
 
 ```
-FurnGen QA WARN: system units = Inches (expected Centimeters)
+FurnGen QA: WARN: system units are Inches, Centimeters recommended
 ```
 
 Fix the units, then **regenerate**. Changing units afterwards rescales the scene
@@ -117,10 +123,10 @@ If everything genuinely matches and results still differ, that is a bug. Please
 ## Geometry warnings from QA
 
 ```
-FurnGen QA WARN: degenerate geometry in FurnGen_Sofa_Cushion_2
+FurnGen QA: FAIL: empty geometry: FurnGen_Sofa_Cushion_2
 ```
 
-A part collapsed to zero extent. This usually means an extreme dimension
+A part collapsed to zero verts or faces. This usually means an extreme dimension
 combination — a very narrow width with a high seat count, for example. Try
 adjusting dimensions, and please report it with the seed and settings, since QA
 catching it means we can reproduce it exactly.
@@ -135,9 +141,9 @@ pieces — each is its own group, so they are easy to reposition.
 
 **Generation is slow**
 
-Use *Draft* while exploring. Close-up 4K adds a second Noise pass and higher
-TurboSmooth iterations to every soft part, which multiplies quickly across a room
-set of nine items.
+Use *Draft* while exploring. Draft is the only quality level that skips the fine
+wrinkle Noise pass entirely, and it drops TurboSmooth to a single iteration —
+which matters most on a room set, where the cost multiplies across nine items.
 
 **The scene becomes heavy**
 

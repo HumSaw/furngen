@@ -69,16 +69,21 @@ random decision in the build derives from that one integer.
 
 ## A permanent toolbar button
 
-Running a script from a file menu every session gets old. After the first run,
-type this into the MAXScript Listener (F11):
+Running a script from a file menu every session gets old. You do not need to do
+anything to enable this: on a successful load, `FurnGen.ms` registers a macro
+automatically.
 
-```maxscript
-FurnGenRegisterMacro()
+Open **Customize → Customize User Interface → Toolbars**, choose the category
+**FurnGen**, and drag **FurnGen** onto any toolbar. The button survives
+restarts, and pressing it re-runs the loader from wherever you originally ran
+it — so do not move the folder afterwards.
+
+Registration is wrapped in a `try`, so if your Max configuration disallows it
+the tool still loads normally and prints:
+
 ```
-
-Then open **Customize → Customize User Interface → Toolbars**, choose the
-category **FurnGen**, and drag **FurnGen Panel** onto any toolbar. The button
-survives restarts.
+FurnGen: macro registration skipped (...)
+```
 
 ## Where things end up
 
