@@ -1,0 +1,52 @@
+name: Release
+
+# Builds the distributable archive and attaches it to the GitHub Release.
+# Runs on version tags, and manually for a given tag if an upload ever
+# needs to be repeated.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing tag to (re)attach the archive to, e.g. v1.0.0'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.tag.outputs.tag }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # The linter and packager run on plain Node with no node_modules.
+      - name: Lint MAXScript sources
+        run: node tools/lint-maxscript.mjs
+
+      - name: Build archive
+        run: node tools/package-release.mjs
+
+      - name: Attach archive to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "${{ steps.tag.outputs.tag }}" dist/FurnGen-*.zip --clobber --repo "${{ github.repository }}"
