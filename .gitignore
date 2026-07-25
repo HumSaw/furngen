@@ -13,3 +13,15 @@ __v0_jsx-dev-runtime.ts
 node_modules
 .next/
 .DS_Store
+
+# Release archives produced by tools/package-release.mjs
+dist/
+
+# 3ds Max working files and backups
+*.max
+*.bak
+autoback/
+
+# FurnGen stores presets in the Max user-scripts folder, but keep this
+# here so a copy dropped into the repo never gets committed by accident.
+FurnGen_Presets.ini

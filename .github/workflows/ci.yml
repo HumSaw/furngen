@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Cancel superseded runs on the same ref to keep queues short.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  maxscript:
+    name: MAXScript lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # The linter is dependency-free by design, so no install step is
+      # needed and this job stays fast enough to run on every push.
+      - name: Lint MAXScript sources
+        run: node tools/lint-maxscript.mjs
+
+      - name: Build release archive
+        run: node tools/package-release.mjs
+
+      - name: Verify archive integrity
+        run: |
+          python3 - <<'PY'
+          import glob, sys, zipfile
+          matches = glob.glob("dist/FurnGen-*.zip")
+          if not matches:
+              sys.exit("no archive produced")
+          archive = matches[0]
+          with zipfile.ZipFile(archive) as z:
+              broken = z.testzip()
+              if broken:
+                  sys.exit(f"corrupt entry: {broken}")
+              names = z.namelist()
+          required = ["FurnGen/FurnGen.ms", "FurnGen/modules/core.ms", "FurnGen/INSTALL.txt"]
+          missing = [n for n in required if n not in names]
+          if missing:
+              sys.exit(f"missing from archive: {missing}")
+          print(f"{archive}: {len(names)} entries, CRC OK")
+          PY
+
+      - name: Upload release archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: furngen-archive
+          path: dist/*.zip
+          if-no-files-found: error
+
+  site:
+    name: Site build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm exec tsc --noEmit
+
+      - name: Build
+        run: pnpm build

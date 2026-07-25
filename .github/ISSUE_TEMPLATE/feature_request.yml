@@ -1,0 +1,44 @@
+name: Feature request
+description: Propose a new furniture type, style, fabric or workflow
+labels: [enhancement]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of addition is this?
+      options:
+        - New furniture type (in an existing category)
+        - New category
+        - New style preset
+        - New fabric or material
+        - New room set
+        - Workflow or UI improvement
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: Describe the piece or behaviour you want.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reference
+    attributes:
+      label: Visual reference
+      description: >
+        Links or images of real furniture are the most valuable input here.
+        Proportions matter more than anything else for believability.
+
+  - type: textarea
+    id: dimensions
+    attributes:
+      label: Real-world dimensions
+      description: >
+        If you know the typical dimensions in centimetres, list them.
+        FurnGen authors every item at real scale.
+      placeholder: |
+        Width 180, depth 90, seat height 42, back height 85

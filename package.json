@@ -1,12 +1,17 @@
 {
-  "name": "my-project",
-  "version": "0.1.0",
+  "name": "furngen",
+  "version": "1.0.0",
   "private": true,
+  "description": "Procedural furniture generator for Autodesk 3ds Max, plus its documentation site",
+  "license": "MIT",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "node tools/lint-maxscript.mjs",
+    "lint:site": "eslint .",
+    "package": "node tools/package-release.mjs",
+    "check": "node tools/lint-maxscript.mjs && tsc --noEmit"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",

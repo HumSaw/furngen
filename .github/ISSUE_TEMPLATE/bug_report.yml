@@ -1,0 +1,75 @@
+name: Bug report
+description: Something generates incorrectly, throws an error, or renders wrong
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. The single most useful thing you can attach is
+        the **seed** and the **Listener output**, because every FurnGen result
+        is reproducible from its seed.
+
+  - type: input
+    id: version
+    attributes:
+      label: FurnGen version
+      description: Shown in the panel title bar, e.g. `FurnGen v1.0.0`
+      placeholder: "1.0.0"
+    validations:
+      required: true
+
+  - type: input
+    id: max-version
+    attributes:
+      label: 3ds Max version
+      placeholder: "2024.2"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: renderer
+    attributes:
+      label: Active renderer
+      options:
+        - Corona
+        - Arnold
+        - Scanline
+        - ART
+        - V-Ray
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: Which category, type, style and seed did you use?
+      placeholder: |
+        Category: Beds
+        Type: King-size
+        Style: Japandi
+        Seed: 481207
+        Quality: Production
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected versus what happened
+    validations:
+      required: true
+
+  - type: textarea
+    id: listener
+    attributes:
+      label: MAXScript Listener output
+      description: Press F11 in 3ds Max and paste everything prefixed with `FurnGen`.
+      render: text
+
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot
+      description: A viewport or render screenshot helps enormously for geometry issues.
