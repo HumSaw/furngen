@@ -1,5 +1,7 @@
 # Быстрый старт
 
+[English](../en/getting-started.md) &middot; Русский
+
 Установка FurnGen и первая сгенерированная модель.
 
 ---

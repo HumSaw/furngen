@@ -1,5 +1,7 @@
 # Getting started
 
+English &middot; [Русский](../ru/getting-started.md)
+
 [← Documentation index](README.md)
 
 ## Requirements
@@ -17,7 +19,7 @@ external dependency at runtime.
 
 ### From a release archive
 
-1. Download `FurnGen-<version>.zip` from the [Releases](../../../releases) page.
+1. Download `FurnGen-<version>.zip` from the [Releases](https://github.com/OWNER/furngen/releases) page.
 2. Unzip it anywhere: your Max user-scripts folder, a network share, a project
    folder. Keep the `FurnGen` folder intact — the entry point resolves its
    modules relative to its own location, so moving `FurnGen.ms` away from

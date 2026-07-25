@@ -42,7 +42,7 @@ seed always rebuilds the same piece, down to the tilt of each cushion.
 
 **Requirements:** 3ds Max 2020 or newer. Corona Renderer is optional.
 
-1. Download the latest archive from [Releases](../../releases), or build it yourself:
+1. Download the latest archive from [Releases](https://github.com/OWNER/furngen/releases), or build it yourself:
 
    ```bash
    node tools/package-release.mjs   # -> dist/FurnGen-1.0.0.zip

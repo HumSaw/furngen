@@ -10,8 +10,9 @@
     "start": "next start",
     "lint": "node tools/lint-maxscript.mjs",
     "lint:site": "eslint .",
+    "check:links": "node tools/check-links.mjs",
     "package": "node tools/package-release.mjs",
-    "check": "node tools/lint-maxscript.mjs && tsc --noEmit"
+    "check": "node tools/lint-maxscript.mjs && node tools/check-links.mjs && tsc --noEmit"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",

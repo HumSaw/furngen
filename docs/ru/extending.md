@@ -1,5 +1,7 @@
 # Расширение системы
 
+[English](../en/extending.md) &middot; Русский
+
 Добавление своего предмета мебели, стиля или ткани.
 
 ---
@@ -73,7 +75,7 @@ global FurnGen_TypeLabels = #(
 ### 3. Проверка
 
 ```bash
-npm run lint
+pnpm lint
 ```
 
 ---
@@ -160,8 +162,8 @@ global FurnGen_CatLabels  = #("Sofas", ..., "Decor", "Lighting")
 ```maxscript
 #industrial:
 (
-    cfg.armType = #square
-    cfg.legType = #block
+    cfg.armStyle = #square
+    cfg.legStyle = #block
     cfg.seatHeight = 42.0
     cfg.cushionSoftness = 0.35
     cfg.fabricColor = fgPick #(color 78 74 70, color 96 90 84)
@@ -194,8 +196,8 @@ global FurnGen_StyleKeys = #(..., #midcentury, #industrial)
 ## Перед отправкой изменений
 
 ```bash
-npm run lint       # структура MAXScript и разрешение зависимостей
-npm run package    # сборка релизного архива
+pnpm lint       # структура MAXScript и разрешение зависимостей
+pnpm package    # сборка релизного архива
 ```
 
 Проверьте в 3ds Max:

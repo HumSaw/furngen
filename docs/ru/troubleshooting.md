@@ -1,5 +1,7 @@
 # Решение проблем
 
+[English](../en/troubleshooting.md) &middot; Русский
+
 ---
 
 ## Диагностика в первую очередь
@@ -29,7 +31,7 @@ FurnGen 1.0.0 ready. Recommended System Units: Centimeters.
 
 ### Причина 1: Corona установлена, но не активна
 
-`Corona installed: true | Corona active: false`
+`FurnGen Materials loaded (Corona available: true, Corona active: false)`
 
 Corona-материалы рендерятся серыми или чёрными под другим движком.
 
@@ -63,8 +65,11 @@ FurnGen MTL WARN: no colour property on 'FurnGen_Fabric', falling back to Standa
 
 ### Модули не найдены
 
+Появляется диалог `FurnGen could not start: N module(s) missing.`, а в Listener
+перечислены конкретные файлы:
+
 ```
-FurnGen: modules folder not found next to FurnGen.ms
+FurnGen ERROR: module not found: C:\...\modules\core.ms
 ```
 
 `FurnGen.ms` ищет папку `modules` рядом с собой. Проверьте структуру:
@@ -98,10 +103,10 @@ FurnGen/
 
 ## Модель гигантская или микроскопическая
 
-Строка состояния сообщает:
+Строка состояния показывает `CHECKED: ...`, а в Listener появляется:
 
 ```
-WARN: system units are Inches, Centimeters recommended
+FurnGen QA: WARN: system units are Inches, Centimeters recommended
 ```
 
 `Customize → Units Setup → System Unit Setup → 1 Unit = 1.0 Centimeters`.

@@ -1,5 +1,7 @@
 # Extending FurnGen
 
+English &middot; [Русский](../ru/extending.md)
+
 [← Documentation index](README.md)
 
 Read [Architecture](architecture.md) first — particularly the module load order,

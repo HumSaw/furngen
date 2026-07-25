@@ -21,8 +21,13 @@ The MAXScript tooling has no dependencies:
 
 ```bash
 node tools/lint-maxscript.mjs      # lint all .ms sources
+node tools/check-links.mjs         # validate internal documentation links
 node tools/package-release.mjs     # build dist/FurnGen-<version>.zip
 ```
+
+All three run on plain Node with no `node_modules`, which is why CI can lint a
+pull request without installing anything. If you have run `pnpm install`, the
+same checks are available as `pnpm lint`, `pnpm check:links` and `pnpm package`.
 
 To test your changes, run `src/FurnGen.ms` in 3ds Max directly from your clone.
 No packaging step is needed during development.
@@ -65,6 +70,8 @@ For any change that touches geometry or materials:
 - [ ] Tested with Corona active **and** inactive — materials coloured in both
 - [ ] Tested at Draft and Production quality
 - [ ] Proportions read correctly against real furniture dimensions
+- [ ] If you touched the docs, `node tools/check-links.mjs` reports no errors
+      and the matching page in the other language was updated too
 
 Note your 3ds Max version, renderer(s) and the seeds you used. A screenshot is
 required for geometry changes — proportions are the whole game here, and they are

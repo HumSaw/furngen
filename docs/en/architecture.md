@@ -1,5 +1,7 @@
 # Architecture
 
+English &middot; [Русский](../ru/architecture.md)
+
 [← Documentation index](README.md)
 
 How FurnGen is put together, and why it is built this way.

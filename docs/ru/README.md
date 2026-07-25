@@ -1,8 +1,8 @@
 # Документация FurnGen
 
-Процедурный генератор мебели для Autodesk 3ds Max.
+[English](../en/README.md) &middot; Русский
 
-> **English documentation:** [`docs/en/`](../en/README.md)
+Процедурный генератор мебели для Autodesk 3ds Max.
 
 ---
 

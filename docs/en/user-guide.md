@@ -1,5 +1,7 @@
 # User guide
 
+English &middot; [Русский](../ru/user-guide.md)
+
 [← Documentation index](README.md)
 
 Every control in the panel, and what it actually changes.

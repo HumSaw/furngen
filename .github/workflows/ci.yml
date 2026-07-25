@@ -30,6 +30,9 @@ jobs:
       - name: Lint MAXScript sources
         run: node tools/lint-maxscript.mjs
 
+      - name: Check documentation links
+        run: node tools/check-links.mjs
+
       - name: Build release archive
         run: node tools/package-release.mjs
 
