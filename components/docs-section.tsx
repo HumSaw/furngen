@@ -38,6 +38,9 @@ export function DocsSection() {
               </div>
             </li>
           ))}
+          {/* Five guides never fill the last row of a 2- or 3-column grid. Without a
+              filler the parent's hairline colour shows through as a solid block. */}
+          <li aria-hidden="true" className="hidden bg-card sm:block" />
         </ul>
       </div>
     </section>

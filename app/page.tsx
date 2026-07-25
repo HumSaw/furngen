@@ -1,5 +1,6 @@
 import { Catalogue } from '@/components/catalogue'
 import { DocsSection } from '@/components/docs-section'
+import { Gallery } from '@/components/gallery'
 import { Hero } from '@/components/hero'
 import { InstallSteps } from '@/components/install-steps'
 import { MaterialsSection } from '@/components/materials-section'
@@ -16,6 +17,7 @@ export default function Page() {
         <Hero />
         <Catalogue />
         <StylesGrid />
+        <Gallery />
         <SeedSection />
         <MaterialsSection />
         <InstallSteps />

@@ -23,8 +23,9 @@ export function MaterialsSection() {
             />
           </div>
 
-          <div className="flex flex-col gap-10">
-            <div className="flex flex-col gap-4">
+          {/* min-w-0 lets the quality table scroll in its wrapper instead of widening the page. */}
+          <div className="flex min-w-0 flex-col gap-10">
+            <div className="flex min-w-0 flex-col gap-4">
               <h3 className="font-mono text-xs tracking-tight text-primary">Fabrics</h3>
               <ul className="flex flex-col divide-y divide-border rounded-lg border border-border bg-card">
                 {fabrics.map((fabric) => (
@@ -43,9 +44,9 @@ export function MaterialsSection() {
               </p>
             </div>
 
-            <div className="flex flex-col gap-4">
+            <div className="flex min-w-0 flex-col gap-4">
               <h3 className="font-mono text-xs tracking-tight text-primary">Quality levels</h3>
-              <div className="overflow-x-auto rounded-lg border border-border bg-card">
+              <div className="min-w-0 overflow-x-auto rounded-lg border border-border bg-card">
                 <table className="w-full text-sm">
                   <caption className="sr-only">
                     Segment counts, fillet segments, TurboSmooth iterations and fine wrinkle pass per

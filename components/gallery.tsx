@@ -9,25 +9,25 @@ const shots = [
   {
     src: '/images/style-scandinavian.png',
     style: 'Scandinavian',
-    spec: 'rounded arms · cone legs · linen',
+    spec: 'rounded arms · cone legs · 16cm lift',
     seed: '10294',
   },
   {
     src: '/images/style-luxury.png',
     style: 'Luxury',
-    spec: 'rounded arms · cylinder legs · velvet',
+    spec: 'rounded arms · cylinder legs · forces velvet',
     seed: '77310',
   },
   {
     src: '/images/style-brutalism.png',
     style: 'Brutalism',
-    spec: 'square arms · no legs · cotton',
+    spec: 'square arms · no legs · piping off',
     seed: '20488',
   },
   {
     src: '/images/style-midcentury.png',
     style: 'Mid-century',
-    spec: 'pillow arms · cone legs · bouclé',
+    spec: 'pillow arms · cone legs · 18cm lift',
     seed: '61905',
   },
 ]
@@ -39,7 +39,7 @@ export function Gallery() {
         <SectionHeading
           eyebrow="Output"
           title="One category, four styles"
-          description="Every image below is the same request — a three-seat sofa — with only the style changed. The armrest silhouette, leg profile, seat depth and palette all move together."
+          description="Each image below is a sofa from the same category, with only the style changed. The armrest silhouette, leg profile, seat proportions and palette all move together."
         />
 
         <ul className="mt-12 grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2">

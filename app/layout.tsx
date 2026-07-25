@@ -13,10 +13,17 @@ const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
 })
 
+// Relative Open Graph paths need an absolute base, so resolve it from the
+// deployment rather than hardcoding a domain that may not exist.
+const siteUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
+  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+  : 'http://localhost:3000'
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: 'FurnGen — Procedural furniture for 3ds Max',
   description:
-    'An open-source MAXScript tool that generates production-ready furniture in 3ds Max. 30+ item types, 8 design styles, 5 upholstery fabrics, and deterministic seeds that rebuild identical geometry every time.',
+    'An open-source MAXScript tool that generates production-ready furniture in 3ds Max. 28 item types, 8 design styles, 5 upholstery fabrics, and deterministic seeds that rebuild identical geometry every time.',
   keywords: [
     '3ds Max',
     'MAXScript',

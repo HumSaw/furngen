@@ -48,7 +48,8 @@ export function SeedSection() {
           </ul>
         </div>
 
-        <figure className="overflow-hidden rounded-lg border border-border bg-card">
+        {/* min-w-0 lets the snippet scroll inside the panel instead of widening the page. */}
+        <figure className="min-w-0 overflow-hidden rounded-lg border border-border bg-card">
           <figcaption className="flex items-center gap-2 border-b border-border px-4 py-2.5 font-mono text-xs text-muted-foreground">
             <span className="size-2 rounded-full bg-primary" aria-hidden="true" />
             MAXScript Listener
