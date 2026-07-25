@@ -19,6 +19,7 @@
  *   node tools/package-release.mjs --out build
  */
 
+import { execFileSync } from "node:child_process"
 import fs from "node:fs/promises"
 import path from "node:path"
 import zlib from "node:zlib"
@@ -64,17 +65,35 @@ function crc32(buf) {
   return (c ^ -1) >>> 0
 }
 
-/** MS-DOS date/time pair used by the ZIP header. */
+/** MS-DOS date/time pair used by the ZIP header. UTC, so the stamp does not
+ * depend on the builder's timezone. */
 function dosStamp(date) {
-  const year = Math.max(1980, date.getFullYear())
+  const year = Math.max(1980, date.getUTCFullYear())
   return {
-    time: (date.getHours() << 11) | (date.getMinutes() << 5) | (date.getSeconds() >> 1),
-    date: ((year - 1980) << 9) | ((date.getMonth() + 1) << 5) | date.getDate(),
+    time: (date.getUTCHours() << 11) | (date.getUTCMinutes() << 5) | (date.getUTCSeconds() >> 1),
+    date: ((year - 1980) << 9) | ((date.getUTCMonth() + 1) << 5) | date.getUTCDate(),
   }
 }
 
+/**
+ * Entry timestamps come from the last commit (or SOURCE_DATE_EPOCH), not the
+ * clock, so the same commit produces a byte-identical archive locally and in
+ * CI. UTC keeps the DOS stamp independent of the builder's timezone.
+ */
+function buildDate() {
+  const epoch = process.env.SOURCE_DATE_EPOCH
+  if (epoch && /^\d+$/.test(epoch)) return new Date(Number(epoch) * 1000)
+  try {
+    const ct = execFileSync("git", ["log", "-1", "--format=%ct"], { cwd: root }).toString().trim()
+    if (/^\d+$/.test(ct)) return new Date(Number(ct) * 1000)
+  } catch {
+    /* not a git checkout — fall through */
+  }
+  return new Date()
+}
+
 async function writeZip(zipPath, entries) {
-  const stamp = dosStamp(new Date())
+  const stamp = dosStamp(buildDate())
   const locals = []
   const centrals = []
   let offset = 0
