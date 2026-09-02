@@ -2,12 +2,9 @@
 # where most 3ds Max artists work, and on macOS/Linux CI runners.
 * text=auto eol=lf
 
-# MAXScript is not in GitHub's language database, so linguist would
-# otherwise leave these files uncounted. Map them to a close relative so
-# the repository language bar reflects reality.
-# Line endings stay LF everywhere, matching .editorconfig; 3ds Max reads
-# LF files without complaint on every supported version.
-*.ms linguist-language=Lua
+# Explicit classification keeps .ms sources from being mistaken for Lua.
+# Line endings stay LF everywhere; 3ds Max reads them on every supported version.
+*.ms linguist-language=MAXScript
 
 # Generated artefacts should never appear in diffs or language stats.
 dist/** linguist-generated=true
